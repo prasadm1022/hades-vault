@@ -1,16 +1,66 @@
-# HADES
+<p align="center">
+  <img src="docs/assets/hades-hero.svg" alt="HADES - autonomous AI software company: a 3D human head made of dots" width="100%">
+</p>
 
-HADES is an autonomous software company that runs inside [Claude Code](https://code.claude.com).
-You state business requirements. A Project Manager (your main Claude Code session) runs them
-through role agents: business analyst, architect, tech lead, backend, frontend, AI/ML/data and QA
-engineers, DevOps and cybersecurity. Together they analyse, design, plan, build, test, commit
-locally, deploy, security-test, fix what they find, learn and report. A stage passes only on tool
-evidence (builds, tests, scanners, health checks), never on an agent's word. HADES never pushes:
-you review the local commits and push them yourself. It can also be exported to other coding
-agents (Codex, Cursor, Gemini CLI, GitHub Copilot, Devin, Cline, OpenCode, any `AGENTS.md` tool),
-with the gaps listed below.
+<h1 align="center">HADES: the autonomous AI software company for Claude Code</h1>
 
-**The name.** This repository is **hades-vault**: two parts that live in one folder.
+<p align="center">
+  <strong>State a requirement. A team of AI agents analyses, designs, builds, tests, deploys and security-scans it, then hands you local commits to review.</strong>
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white" alt="Node.js 22 or newer"></a>
+  <a href="https://code.claude.com"><img src="https://img.shields.io/badge/Claude%20Code-2.1.271%2B-D97757?logo=claude&logoColor=white" alt="Claude Code 2.1.271 or newer"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platforms: Windows, macOS, Linux">
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="Pull requests welcome"></a>
+  <a href="https://github.com/prasadm1022/hades-vault/stargazers"><img src="https://img.shields.io/github/stars/prasadm1022/hades-vault?style=social" alt="GitHub stars"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#usage-with-other-coding-agents">Other coding agents</a> ·
+  <a href="#documentation">Docs</a> ·
+  <a href="#faq">FAQ</a>
+</p>
+
+**HADES is an open-source, autonomous AI software company that runs inside
+[Claude Code](https://code.claude.com).** You state business requirements in plain language. A
+Project Manager (your main Claude Code session) runs them through a team of Claude Code subagents:
+business analyst, software architect, tech lead, backend, frontend, AI/ML/data and QA engineers,
+DevOps and cybersecurity. Together they analyse, design, plan, build, test, commit locally, deploy,
+security-test, fix what they find, learn and report. A stage passes only on tool evidence (builds,
+tests, scanners, health checks), never on an agent's word. HADES never pushes: you review the local
+commits and push them yourself. The same company can be exported to other coding agents (OpenAI
+Codex, Cursor, Gemini CLI, GitHub Copilot, Devin, Cline, OpenCode, any `AGENTS.md` tool), with the
+gaps listed [below](#support-matrix).
+
+## Why HADES
+
+- **A whole AI dev team, not one chat.** 11 Claude Code subagents (9 roles plus 2 helpers), each
+  with its own prompt, tools, model and write scope. A role with no work in a task is never spawned.
+- **Requirements in, tested and scanned commits out.** Acceptance criteria, design, work plan,
+  code, tests, QA report, deploy record, security report and a final report, all filed per task.
+- **Evidence-based quality gates.** `hades gate` runs your build, tests and scanners; the CLI refuses
+  to pass a stage with open critical or high defects. QA does not trust engineers, and security does
+  not trust QA.
+- **A deterministic safety guard.** A PreToolUse hook and deny rules block `git push`, destructive
+  git, secret reads and publishing in every permission mode and inside subagents (a shell-text
+  guard, not a sandbox: see [limits](#safety-model-and-limits)).
+- **Token-efficient by design.** Short static role prompts, file handoffs of at most 15 lines,
+  one-line gate output, symbol-level code navigation and per-role model routing.
+- **An open-source tool stack, pinned.** Serena, Playwright MCP, Gitleaks, Semgrep, Trivy, ZAP,
+  ccusage, REA and the AWS MCP tooling, vendored as git submodules with exact pins.
+- **Works with most stacks.** Stack detection covers many ecosystems and monorepos; HADES learns
+  new technologies into your vault.
+- **Not locked to one agent.** `hades export` renders the same company for Codex, Cursor, Gemini
+  CLI, GitHub Copilot, Devin (formerly Windsurf), Cline, OpenCode and AGENTS.md tools.
+
+<details>
+<summary><strong>Why is the repository called hades-vault?</strong></summary>
+
+This repository is **hades-vault**: two parts that live in one folder.
 
 - **HADES** (the `hades` CLI, the `hades-<role>` agents, the `/hades` skills, the guard hook,
   policies, playbooks and templates) is the agentic system: the shareable, open-source platform in
@@ -21,38 +71,49 @@ with the gaps listed below.
   as part of) the platform. Back it up to a **private** remote of your own. A vault elsewhere
   (`hades init --vault <path>`) still works.
 
-Status: version 2.0.0 (unreleased changes in [CHANGELOG.md](CHANGELOG.md)) · License: MIT ·
-Node.js 22 or newer · Windows, macOS, Linux.
+</details>
 
 ## Contents
 
-1. [What you get](#what-you-get)
-2. [How it saves tokens and stays accurate](#how-it-saves-tokens-and-stays-accurate)
-3. [Quick start](#quick-start)
-4. [Requirements](#requirements)
-5. [Installation](#installation)
-6. [Usage with Claude Code](#usage-with-claude-code)
-7. [Usage with other coding agents](#usage-with-other-coding-agents)
-8. [Configuration reference](#configuration-reference)
-9. [Safety model and limits](#safety-model-and-limits)
-10. [Vendored tools](#vendored-tools)
-11. [Project layout](#project-layout)
-12. [Upgrading and migrating from v1](#upgrading-and-migrating-from-v1)
-13. [Troubleshooting and FAQ](#troubleshooting-and-faq)
-14. [Contributing, security, license, acknowledgements](#contributing-security-license-acknowledgements)
+- [How it works](#how-it-works): the organisation, the pipeline, what "fully automated" means
+- [HADES compared with a single coding-agent session](#hades-compared-with-a-single-coding-agent-session)
+- [How it saves tokens and stays accurate](#how-it-saves-tokens-and-stays-accurate)
+- [Quick start](#quick-start) · [Requirements](#requirements) · [Installation](#installation)
+- [Usage with Claude Code](#usage-with-claude-code) · [Usage with other coding agents](#usage-with-other-coding-agents)
+- [Configuration reference](#configuration-reference) · [Safety model and limits](#safety-model-and-limits)
+- [Vendored tools](#vendored-tools) · [Project layout](#project-layout) · [Upgrading and migrating from v1](#upgrading-and-migrating-from-v1)
+- [FAQ](#faq) · [Troubleshooting](#troubleshooting) · [Contributing, security, license, acknowledgements](#contributing-security-license-acknowledgements)
 
-## What you get
+## How it works
 
 ### The organisation
 
-```text
-Owner ................. states requirements, reviews commits, pushes
-Project Manager ....... the main Claude Code session (/hades): orchestrates, commits, reports
-Company staff ......... business-analyst  software-architect  devops-engineer  cybersecurity-engineer
-  (one each, shared by every team)
-Team roles ............ tech-lead  backend-engineer (DB + backend)  frontend-engineer (UI/UX + frontend)
-  (every team)          aiml-data-engineer  qa-engineer (manual + automation)
-Helpers ............... scout (read-only lookups)  knowledge-curator (learning loop)
+```mermaid
+flowchart TB
+  owner(["Owner (you): requirements in, review and push"])
+  pm["Project Manager: the main Claude Code session (/hades)"]
+  owner -->|requirements| pm
+  pm -->|local commits and a report| owner
+  subgraph staff ["Company staff (one each, shared by every team)"]
+    ba[business-analyst]
+    arch[software-architect]
+    devops[devops-engineer]
+    sec[cybersecurity-engineer]
+  end
+  subgraph team ["Team roles (every team)"]
+    tl[tech-lead]
+    be["backend-engineer (DB + backend)"]
+    fe["frontend-engineer (UI/UX + frontend)"]
+    ai[aiml-data-engineer]
+    qa["qa-engineer (manual + automation)"]
+  end
+  subgraph helpers [Helpers]
+    scout["scout (read-only lookups)"]
+    kc["knowledge-curator (learning loop)"]
+  end
+  pm -->|spawns per stage| staff
+  pm -->|spawns per stage| team
+  pm -->|spawns on demand| helpers
 ```
 
 Structure: organizations -> teams (`main` or `sub`, same roster) -> projects (git repositories).
@@ -69,11 +130,19 @@ vault folder inside it is git-ignored (`hades doctor` fails if it is not).
 
 ### The pipeline
 
-```text
-requirements
-  -> intake -> analysis -> design -> planning -> build -> qa <-> fix -> release (local commit)
-  -> deploy || security <-> fix -> redeploy -> close (learn, usage, report)
-  -> you review the commits and push
+```mermaid
+flowchart LR
+  req([requirements]) --> intake --> analysis --> design --> planning --> build --> qa
+  qa -->|defect, max 3 rounds| fixq[fix] --> qa
+  qa --> release["release (local commit)"]
+  release --> deploy
+  release --> security
+  deploy -->|unhealthy, max 3 rounds| fixd[fix] --> deploy
+  security -->|defect, max 3 rounds| fixs[fix] --> redeploy --> security
+  fixq -.->|after 3 rounds| blocked(["blocked, reported"])
+  deploy --> close
+  security --> close["close (learn, usage, report)"]
+  close --> push(["you review the commits and push"])
 ```
 
 | Stage | Owner | Passes on |
@@ -110,6 +179,23 @@ configuration and records *not provisioned*; a deploy that needs a push is recor
 after 3 rounds is reported as `blocked`. A change can pass every gate and still be wrong in
 production: read the diff before you push.
 
+## HADES compared with a single coding-agent session
+
+A plain Claude Code (or other coding agent) session is the right tool for a quick question or a
+small edit. HADES adds process around the same models for work you want analysed, tested, scanned
+and committed.
+
+| | A single coding-agent session | HADES |
+|---|---|---|
+| Requirements | you prompt step by step | the business analyst writes acceptance criteria `AC-n`; ambiguity becomes recorded assumptions |
+| Design and plan | inside the conversation | architect's component map and contracts; tech lead's work plan, validated by `hades task plan` |
+| Who checks the work | usually the session that wrote it | separate QA and security agents; integration review for M and L tasks |
+| "Done" means | the model says so | tool evidence: gates, AC -> test case coverage, health checks, no open critical/high defect |
+| Security testing | whatever you run yourself | Gitleaks, Semgrep, Trivy, manual review and ZAP (active scans only on test or local targets) |
+| `git push` and destructive git | governed by your permission settings | blocked by the guard hook and deny rules in every mode |
+| Memory between tasks | the conversation and project instruction files | your private vault: team knowledge, task records, lessons |
+| Token use | lowest for a one-off edit | more agents, so a full pipeline costs more than a quick edit; handoffs and gate output are trimmed and S tasks run every stage at reduced depth |
+
 ## How it saves tokens and stays accurate
 
 - Native subagents with short, static role prompts; a role with no work is not spawned.
@@ -128,8 +214,8 @@ production: read the diff before you push.
 
 ## Quick start
 
-For Claude Code on macOS or Linux, with `~/code` as the workspace that holds your projects
-([Installation](#installation) explains each step and has the PowerShell lines):
+For Claude Code, with `~/code` (macOS, Linux) or `C:\code` (Windows) as the workspace that holds
+your projects ([Installation](#installation) explains each step):
 
 ```bash
 mkdir -p ~/code && cd ~/code
@@ -141,7 +227,19 @@ node bin/hades.mjs install
 node bin/hades.mjs doctor
 ```
 
-Then start `claude` in `~/code` and onboard an existing project at `~/code/acme/portal`:
+```powershell
+git config --global core.longpaths true
+New-Item -ItemType Directory -Force C:\code | Out-Null
+Set-Location C:\code
+git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades-vault.git
+Set-Location hades-vault
+node bin/hades.mjs init
+node bin/hades.mjs tools setup
+node bin/hades.mjs install
+node bin/hades.mjs doctor
+```
+
+Then start `claude` in `~/code` (`C:\code`) and onboard an existing project at `~/code/acme/portal`:
 
 ```text
 /hades-new-team portal acme/portal --org acme
@@ -149,7 +247,9 @@ Then start `claude` in `~/code` and onboard an existing project at `~/code/acme/
 ```
 
 For another coding agent, run `node bin/hades.mjs export <target>` instead of `install`
-([Usage with other coding agents](#usage-with-other-coding-agents)).
+([Usage with other coding agents](#usage-with-other-coding-agents)). In Codex type `$hades ...` and
+`$hades-new-team ...` instead of `/hades ...`; per-agent steps (trust prompt, `/hooks`) are in
+[Quick setup per platform](#support-matrix).
 
 ## Requirements
 
@@ -175,7 +275,7 @@ For another coding agent, run `node bin/hades.mjs export <target>` instead of `i
 The examples use a workspace folder that holds the engine and your projects: `~/code` on
 macOS/Linux, `C:\code` on Windows. The engine is cloned to `~/code/hades-vault` (`C:\code\hades-vault`)
 and the vault lives inside it at `.vault/`. Every `node bin/hades.mjs ...` line runs from the engine
-folder.
+folder and works unchanged in PowerShell, except empty values (see [Troubleshooting](#troubleshooting)).
 
 ### 1. Clone the engine with its submodules
 
@@ -217,7 +317,8 @@ command must print the `.vault` folder, not the engine folder (`hades doctor` ch
 
 ```bash
 git -C .vault rev-parse --show-toplevel
-git -C .vault add -A && git -C .vault commit -m "Initial vault"
+git -C .vault add -A
+git -C .vault commit -m "Initial vault"
 git -C .vault remote add origin <your-private-repository-url>
 git -C .vault push -u origin HEAD
 ```
@@ -330,8 +431,7 @@ cd ~/code
 claude
 ```
 
-Lines in `text` blocks below are typed into Claude Code. Shell commands run from the engine folder
-and work unchanged in PowerShell, except empty values (see the [FAQ](#troubleshooting-and-faq)).
+Lines in `text` blocks below are typed into Claude Code. Shell commands run from the engine folder.
 
 ### Onboard an existing project (once per project)
 
@@ -414,7 +514,8 @@ node bin/hades.mjs team set portal env live via_push true   # CI deploys on push
 node bin/hades.mjs team set portal security dast_test full
 ```
 
-### AWS (only if a team deploys to AWS)
+<details>
+<summary><strong>AWS (only if a team deploys to AWS)</strong></summary>
 
 1. Create a least-privilege IAM role or IAM Identity Center permission set scoped to the team's
    resources (no `*` actions or resources, no IAM user keys). Never use the root user.
@@ -435,6 +536,8 @@ node bin/hades.mjs team set portal security dast_test full
 
 The DevOps engineer uses this profile through the AWS MCP server (`hades mcp aws`) and the AWS CLI.
 HADES never reads credential files and never creates IAM users or keys.
+
+</details>
 
 ### The final report
 
@@ -498,12 +601,14 @@ the workspace, never into a project folder, and start the agent in the workspace
 | Cline | none: single-agent mode | file hook (extension and CLI); none in the VS Code extension on native Windows | `cline` CLI | **Basic** |
 | Roo Code (shut down), Aider, any AGENTS.md tool | none: single-agent mode | **none** | the tool's own | **Basic** |
 
-**Full**: everything HADES relies on is enforced by the platform. **Good**: PM procedure, separate
-role agents, MCP servers and the guard hook work; typical gaps are one model for every role, all MCP
+**Full**: everything HADES relies on is enforced by the platform. **Good** (per vendor
+documentation; not yet tested end to end on each platform): PM procedure, separate role agents, MCP
+servers and the guard hook are exported; typical gaps are one model for every role, all MCP
 catalogs in every session and no role write scopes. **Basic**: one agent plays every role, and
 nothing blocks a push or a secret read mechanically except the platform's own approvals.
 
-### Quick setup per platform
+<details open>
+<summary><strong>Quick setup per platform</strong></summary>
 
 `~/code` is the workspace, `~/code/hades-vault` the engine, `~/code/hades-vault/.vault` the vault and
 `portal` an onboarded team. Run
@@ -522,7 +627,12 @@ then start the agent in the workspace and type the command. Onboard projects wit
 | OpenCode | `opencode` | Optional: `model: <provider/model>` in `.opencode/agents/hades-<role>.md` (otherwise every role uses the session model). | `/hades portal <requirements>` |
 | Roo Code, Aider, other AGENTS.md tools | `agents-md` | Register the MCP servers by hand where the tool supports MCP: command = your absolute Node path, args = `<engine>/bin/hades.mjs mcp serena` (and `rea`, `playwright`, `aws`). Aider: start it with `--read AGENTS.md --no-auto-commits`. Roo Code: servers in `.roo/mcp.json`, deny `git push` in `roo-cline.deniedCommands`. | `hades portal <requirements>` |
 
-Unattended runs: pick the line for your agent and run it in the workspace (`cd ~/code`). In
+</details>
+
+<details>
+<summary><strong>Unattended runs on other agents</strong></summary>
+
+Pick the line for your agent and run it in the workspace (`cd ~/code`). In
 PowerShell, write the paths out (`C:\code`, `C:\code\hades-vault\.vault`): PowerShell does not expand `~` in
 arguments to other programs. These lines follow each vendor's documentation and were not run here.
 
@@ -560,6 +670,8 @@ opencode run --command hades --auto "portal <requirements>"   # OpenCode
   subagent sessions.
 - **Roo Code, Aider, generic tools**: no guard. Keep approvals on, and never run them unattended
   outside a VM or container.
+
+</details>
 
 To remove an export, delete the files it listed (each carries `hades-generated: true`), the HADES
 block in `AGENTS.md`/`GEMINI.md` and in Codex's `config.toml`, and the HADES entries (`serena`, `rea`,
@@ -793,7 +905,8 @@ node bin/hades.mjs doctor
 recorded autonomy. If you use other agents, run `hades export <target>` again (for Codex, trust the
 changed hook with `/hooks`).
 
-### Moving an existing vault to `.vault`
+<details>
+<summary><strong>Moving an existing vault to <code>.vault</code></strong></summary>
 
 The repository is now named `hades-vault` (`https://github.com/prasadm1022/hades-vault`) and the
 default vault is `<engine>/.vault`. An existing setup keeps working:
@@ -822,7 +935,10 @@ Until step 3, a `hades.config.json` that still names the old absolute vault path
 `registry.json`: the CLI stops with "no vault", and the guard keeps protecting `<engine>/.vault`
 (and a legacy `<engine>/vault`) and warns on every allowed call.
 
-### Migrating from HADES v1
+</details>
+
+<details>
+<summary><strong>Migrating from HADES v1</strong></summary>
 
 v1 kept the framework inside the vault; v2 splits it into this engine and your vault.
 
@@ -837,7 +953,61 @@ v1 kept the framework inside the vault; v2 splits it into this engine and your v
 Old v1 tasks resume with `/hades <team> continue <task-id>`: they are adopted into a v2 task folder
 first, and the v1 files are never changed. Details: [`docs/migration-from-v1.md`](docs/migration-from-v1.md).
 
-## Troubleshooting and FAQ
+</details>
+
+## FAQ
+
+**What is an AI software company?** A team of AI agents organised like a software company: each
+agent has one role (business analysis, architecture, engineering, QA, DevOps, security) and a
+defined hand-off to the next. In HADES the roles are Claude Code subagents, the Project Manager is
+your main session, and a pipeline with quality gates decides when work moves on.
+
+**Can AI agents build a whole app?** HADES can take a new product from a description: the PM creates
+the team and the project folder, the architect chooses the stack, the tech lead scaffolds the
+repository and DevOps adds CI and deploy configuration, then the normal pipeline builds, tests and
+scans it. It stops at local commits and a report. Results depend on the requirement and the model;
+a change can pass every gate and still be wrong, so read the diff before you push.
+
+**How do I run multiple Claude Code subagents as a team?** Set up HADES (`node bin/hades.mjs init`,
+then `node bin/hades.mjs install`), onboard a project with `/hades-new-team <team> <project-path>`,
+then type `/hades <team> <requirements>` (or `/hades <requirements>` for a new product). Your main session becomes the
+Project Manager and spawns the `hades-<role>` subagents stage by stage, in parallel waves during the
+build, with file handoffs between them.
+
+**Is HADES safe to run unattended?** It is built for it, within limits. A deterministic guard hook
+and deny rules block pushes, destructive git, secret reads and publishing in every permission mode
+and inside subagents (as far as a shell-text guard can see), and active security scans run only against test or local targets. The guard
+reads shell text and is not a sandbox, so for unattended runs use Claude Code's sandbox on macOS or
+Linux, or WSL2, a VM or a dev container on Windows. See [Safety model and limits](#safety-model-and-limits).
+
+**Does HADES push to GitHub?** No. It commits locally in your project repositories and the vault;
+you review and push. Pull requests, releases and package publishing are blocked as well.
+
+**Does it work with Cursor, Codex, Gemini CLI or GitHub Copilot?** Yes, through
+`node bin/hades.mjs export <target>` (formats follow vendor documentation; not yet tested end to end
+on each platform), with support rated Good on those platforms and Basic on Cline,
+OpenCode 2.x and AGENTS.md tools. The export formats follow each vendor's documentation and were not
+run against the platforms themselves. See the [support matrix](#support-matrix).
+
+**How much does it cost in tokens?** It depends on the size of the task and the models. A full
+pipeline runs several agents, so it costs more than a quick single-session edit; HADES keeps that
+down with short handoffs, compact gate output, per-role models and a lighter pipeline for S tasks.
+`node bin/hades.mjs usage --task <task-id>` reports tokens and estimated cost per task, and
+`hades run --max-budget-usd <n>` caps a headless run.
+
+**Is it free?** HADES is free and open source under the MIT license, and so are the tools it vendors
+(each under its own license). You need your own access to Claude Code (or the other coding agent),
+and model usage is billed by that provider as usual.
+
+**Is my code private?** Your code stays in your own repositories and your task records stay in your
+private, git-ignored vault. The HADES CLI has no telemetry of its own and uses the network to install
+and check its pinned tools; the vendored tools run with telemetry and update checks off. Like any
+coding-agent session, the agents send the files they work on to your model provider.
+
+## Troubleshooting
+
+<details>
+<summary><strong>Common problems and fixes</strong></summary>
 
 **Doctor warns `claude: ... < 2.1.271: newer agent frontmatter ... is ignored`.** Older Claude Code
 versions ignore agent settings HADES relies on (`omitClaudeMd` and others). Run `claude update`.
@@ -894,11 +1064,24 @@ and ccusage are accepted at the pinned version), or point `HADES_TOOL_<NAME>` at
 **Doctor FAILs on the guard hook's Node binary.** The Node that ran `install` was moved or removed
 (for example by a version manager). Re-run `node bin/hades.mjs install` with the Node 22+ you use now.
 
+</details>
+
+## Documentation
+
+[Getting started](docs/getting-started.md) · [Architecture](docs/architecture.md) ·
+[CLI](docs/cli.md) · [File formats](docs/file-formats.md) · [Autonomy and safety](docs/autonomy-and-safety.md) ·
+[Token economy](docs/token-economy.md) · [Tools](docs/tools.md) · [Other coding agents](docs/other-agents.md) ·
+[Migration from v1](docs/migration-from-v1.md) · [Operating protocol](HADES.md) · [Changelog](CHANGELOG.md)
+
+Current version: 2.0.0 (unreleased changes in [CHANGELOG.md](CHANGELOG.md)).
+
 ## Contributing, security, license, acknowledgements
 
 **Contributing.** See [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
 [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md): no runtime npm dependencies; Windows, macOS and Linux;
-safety rules belong in `hooks/guard.mjs` with tests. Run `npm test` before a pull request.
+safety rules belong in `hooks/guard.mjs` with tests. Run `npm test` before a pull request. Good first
+contributions: technology playbooks and stack fingerprints, deploy recipes, and guard rules with
+tests.
 
 **Security.** Report vulnerabilities privately with GitHub's
 [Report a vulnerability](https://github.com/prasadm1022/hades-vault/security/advisories/new) button, as
@@ -919,7 +1102,12 @@ GPL-3.0-or-later), with NOTICE and legal-notice files to keep when you redistrib
 [MCP Proxy for AWS](https://github.com/aws/mcp-proxy-for-aws). It runs on
 [Claude Code](https://code.claude.com). Product names are trademarks of their owners.
 
-**Documentation.** [Getting started](docs/getting-started.md) - [Architecture](docs/architecture.md) -
-[CLI](docs/cli.md) - [File formats](docs/file-formats.md) - [Autonomy and safety](docs/autonomy-and-safety.md) -
-[Token economy](docs/token-economy.md) - [Tools](docs/tools.md) - [Other coding agents](docs/other-agents.md) -
-[Migration from v1](docs/migration-from-v1.md) - [Changelog](CHANGELOG.md)
+**Author.** Built by Prasad Madusanka ([@prasadm1022](https://github.com/prasadm1022)).
+
+## Star History
+
+<a href="https://star-history.com/#prasadm1022/hades-vault&Date">
+  <img src="https://api.star-history.com/svg?repos=prasadm1022/hades-vault&type=Date" alt="Star history chart for prasadm1022/hades-vault" width="600">
+</a>
+
+If HADES helps you ship, please **star the repository**: it helps other developers find it.
