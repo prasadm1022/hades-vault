@@ -7,6 +7,7 @@ import { loadContext } from '../lib/core/config.mjs';
 const COMMANDS = {
   init: 'Create hades.config.json and scaffold a vault if it does not exist',
   install: 'Install agents, skills, hooks and settings into Claude Code (user or project scope)',
+  export: 'Export HADES to another coding agent: agents-md | codex | cursor | gemini | copilot | windsurf | cline | opencode',
   doctor: 'Check prerequisites, tool pins, config, vault and installed files',
   org: 'Organizations: new | list',
   team: 'Teams: new | resolve | list | set',

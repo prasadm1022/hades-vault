@@ -6,6 +6,19 @@ versions follow [Semantic Versioning](https://semver.org/).
 ## Unreleased
 
 ### Added
+- `hades export <target> [--dir <dir>] [--scope project|user] [--dry-run] [--force]` renders HADES for
+  other coding agents: `codex`, `cursor`, `gemini`, `copilot`, `windsurf` (alias `devin`), `cline`,
+  `opencode`, and `agents-md` for any AGENTS.md tool (`roo` and `aider` fall back to it with a note).
+  The PM procedure becomes the agent's skill or command (single-agent mode where it has no custom
+  agents), the roles its subagents (tools, MCP servers, turn limits and models mapped only where the
+  platform documents them), the MCP servers its MCP configuration, the guard its pre-tool hook.
+  Marked files are updated, other files kept unless `--force` (backup first), JSON configuration
+  merged with a backup; conflicts exit 2. `docs/other-agents.md`: support matrix, setup per
+  platform, limitations.
+- Guard adapters: `hooks/guard.mjs --format codex|cursor|gemini|copilot|windsurf|cline|opencode` maps
+  each platform's documented hook payload to the guard's checks (every file of a patch; shell commands
+  as Bash and PowerShell where the Windows shell is undocumented) and answers in its contract; an
+  unknown format blocks. Tests: `tests/hooks/guard-adapters.test.mjs`, `tests/cli/export.test.mjs`.
 - `hades task adopt <v1-task-id> [--stage <stage>] [--size S|M|L]` turns a HADES v1 task record into a
   v2 task folder (`<id>-<slug>-v2/`) without touching the v1 files; `/hades <team> continue <task-id>`
   resumes v2 tasks and adopted v1 records (`docs/migration-from-v1.md`, Resuming a v1 task).
@@ -18,6 +31,9 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Publishing checklist in `docs/getting-started.md`; fallback private contact in `SECURITY.md`.
 
 ### Changed
+- The guard also self-protects what `hades export` writes: other agents' instruction files
+  (`<workspace>/AGENTS.md`, `GEMINI.md`), hook, MCP and permission configuration, and the HADES
+  agents, skills, commands and plugins of every platform.
 - A gate with nothing runnable is red (`GATE EMPTY`, exit 2; `--allow-empty` accepts it). Every
   command refuses unknown flags. `team.json` `security.dast_live`/`dast_test` are enforced by
   `hades gate --dast`.

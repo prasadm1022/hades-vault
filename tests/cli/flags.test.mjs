@@ -31,6 +31,8 @@ describe('unknown flags', () => {
       ['init'],
       ['install'],
       ['install', '--scope', 'project'],
+      ['export', 'codex', '--dir', v.work],
+      ['export', 'codex', '--scope', 'user'],
       ['doctor'],
       ['org'],
       ['org', 'new', 'globex', '--root', v.work],

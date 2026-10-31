@@ -49,6 +49,21 @@ and `git [-C <repo>] add|commit|status|diff|log|rev-parse ...`. `hades run` (whi
 guarded session asks before running them. An engine path with spaces is quoted in the rules exactly as
 in the agents' CLI line (`node "C:/Users/Jane Doe/git/hades/bin/hades.mjs" task ...`).
 
+## Other coding agents (`--format <platform>`)
+
+`hades export <target>` registers the same guard in other agents' pre-tool hooks as
+`<node> <engine>/hooks/guard.mjs --format <platform>` (`codex`, `cursor`, `gemini`, `copilot`,
+`windsurf`, `cline`, `opencode`). `adaptInput()` maps the platform's documented payload to the inputs
+`evaluate()` reads (shell commands, every file of a patch, file reads and writes, Serena MCP calls);
+`adapterOutput()` answers in the platform's contract (exit 2, or its deny JSON). A shell whose Windows
+dialect the platform does not document is checked as Bash and as PowerShell. An unknown `--format`
+blocks every call (`guard.config`). The files the export writes (instruction files, hook and MCP
+configuration, HADES agents, skills and commands of every platform) are self-protected like the
+Claude settings. Role write scopes need the caller's agent name, which only Claude Code sends: they
+are not enforced on other platforms. Contracts, coverage and gaps per platform:
+[`docs/other-agents.md`](../docs/other-agents.md#the-guard-on-other-platforms). Tests:
+`tests/hooks/guard-adapters.test.mjs`.
+
 ## What it enforces
 
 Rule ids are prefixes (`git.*`, `fs.*`, ...). Data-driven rules live in `guard-policy.json`.

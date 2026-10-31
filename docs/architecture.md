@@ -147,6 +147,10 @@ shipped as a Claude Code plugin because plugin agents ignore `mcpServers`, `hook
 - **Playbooks are not installed.** `playbooks/` (and `company/`) are read by path on demand, with the
   placeholders `<engine>` and `<vault>` defined at the top of each playbook. Only `agents/` and
   `skills/` use the rendered `{{HADES_HOME}}`/`{{HADES_VAULT}}`.
+- **Other coding agents**: `hades export <target>` renders the same skills, agents, MCP servers and
+  guard into another agent's formats (Codex, Cursor, Gemini CLI, GitHub Copilot, Devin, Cline,
+  OpenCode, any AGENTS.md tool), only where that platform documents one (`other-agents.md`). Claude
+  Code stays the reference platform: per-agent models, per-agent MCP and role write scopes exist only there.
 - **AWS**: the DevOps engineer reads the official AWS Agent Toolkit (`tools/aws-agent-toolkit`) skills
   and rules by path through `playbooks/aws.md` (nothing from it is installed or run) and talks to the
   managed AWS MCP server through `mcp-proxy-for-aws` (`hades mcp aws`), signed with the configured

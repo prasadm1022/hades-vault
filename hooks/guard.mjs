@@ -5,6 +5,8 @@
 // rm, config, settings, guard, .env, ...) and OPEN (warning, exit 0) otherwise, so a guard bug cannot
 // brick ordinary work. Work beyond the complexity/time budget blocks (guard.limit).
 // Policy data: hooks/guard-policy.json merged over DEFAULT_POLICY. Docs: hooks/README.md.
+// "--format <platform>" (codex, cursor, gemini, copilot, windsurf, cline, opencode) reads and answers
+// in that coding agent's documented hook contract instead (adaptInput/adapterOutput; "hades export").
 // Zero dependencies. Also importable: evaluate(input) and checkShell(command, opts) for the CLI.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -743,9 +745,27 @@ const MANDATORY_CORE = [
   '{claude}/agents/hades-*', '{claude}/skills/hades*', '{claude}/skills/hades*/**', '{claude}/.claude.json',
   '{workspace}/.claude', '{workspace}/.claude/**', '**/managed-settings*.json', '**/managed-mcp.json',
 ];
+// What "hades export" writes for other coding agents (docs/other-agents.md): instruction files, guard
+// hooks, MCP and permission configuration, HADES agents, skills and commands. An agent that could edit
+// these could switch its own guard off, so they are protected like the Claude settings.
+const EXPORTED_CONFIG = [
+  '{workspace}/AGENTS.md', '{workspace}/GEMINI.md',
+  '{home}/.codex/**', '{home}/.gemini/**', '{home}/.cursor/**', '{home}/.copilot/**', '{home}/.cline/**',
+  '{home}/.config/devin/**', '{home}/.config/opencode/**', '{home}/.agents/skills/hades*', '{home}/.agents/skills/hades*/**',
+  '**/.codex/hooks.json', '**/.codex/config.toml', '**/.codex/agents/hades-*', '**/.agents/skills/hades*', '**/.agents/skills/hades*/**',
+  '**/.cursor/hooks.json', '**/.cursor/mcp.json', '**/.cursor/cli.json', '**/.cursor/agents/hades-*', '**/.cursor/skills/hades*', '**/.cursor/skills/hades*/**',
+  '**/.gemini/settings.json', '**/.gemini/agents/hades-*', '**/.gemini/commands/hades*',
+  '**/.github/hooks/hades-*', '**/.github/agents/hades-*', '**/.github/skills/hades*', '**/.github/skills/hades*/**',
+  '**/.devin/hooks*.json', '**/.devin/config*.json', '**/.devin/mcp_config*.json', '**/.devin/agents/hades-*', '**/.devin/skills/hades*', '**/.devin/skills/hades*/**',
+  '**/devin/config.json', '**/devin/mcp_config.json', '**/devin/agents/hades-*', '**/devin/skills/hades*', '**/devin/skills/hades*/**',
+  '**/.clinerules/hooks/**', '**/.cline/hooks/**', '**/cline/hooks/**', '**/.cline/skills/hades*', '**/.cline/skills/hades*/**', '**/cline_mcp_settings.json',
+  '**/opencode.json', '**/opencode.jsonc', '**/.opencode/plugins/hades-*', '**/.opencode/agents/hades-*', '**/.opencode/commands/hades*',
+  '**/opencode/plugins/hades-*', '**/opencode/agents/hades-*', '**/opencode/commands/hades*',
+];
 const MANDATORY_GENERIC = [
   '**/.claude/settings*.json', '**/.claude/hooks/**', '**/.claude/agents/hades', '**/.claude/agents/hades/**', '**/.claude/agents/hades-*',
   '**/.claude/skills/hades*', '**/.claude/skills/hades*/**', '**/.mcp.json', '**/.claude.json',
+  ...EXPORTED_CONFIG,
 ];
 // Protected file names, for relative paths whose directory is unknown (after "cd" into a glob or a
 // variable) and for MCP tools whose root the guard cannot see.
@@ -3395,7 +3415,220 @@ export function checkShell(command, { shell = 'bash', cwd = process.cwd(), agent
   return b ? { id: b.id, detail: b.detail, message: message(b) } : null;
 }
 
-function logBlock(res, input) {
+// ---------------------------------------------------------------------------------------------
+// Adapters for other coding agents: "guard.mjs --format <platform>" (registered by "hades export").
+// adaptInput() maps the platform's documented pre-tool hook payload to the Claude-style inputs that
+// evaluate() reads (one platform call can become several checks: every file of a patch, a shell
+// command read as Bash and PowerShell where the platform's Windows shell is not documented);
+// adapterOutput() maps the decision to the platform's documented output and exit contract.
+// Tools the guard does not check map to no input (allowed). Docs: docs/other-agents.md.
+// ---------------------------------------------------------------------------------------------
+export const GUARD_FORMATS = ['claude', 'codex', 'cursor', 'gemini', 'copilot', 'windsurf', 'cline', 'opencode'];
+
+const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+// Parameters some platforms pass JSON-encoded (Cursor MCP arguments, Cline tool parameters).
+function decoded(v) {
+  if (typeof v !== 'string') return v;
+  const t = v.trim();
+  if (!/^[[{]/.test(t)) return v;
+  try {
+    return JSON.parse(t);
+  } catch {
+    return v;
+  }
+}
+
+function strOf(o, keys) {
+  if (!isObj(o)) return null;
+  for (const k of keys) if (typeof o[k] === 'string' && o[k]) return o[k];
+  return null;
+}
+
+// A command given as an argument vector (["bash", "-lc", "..."]) becomes one quoted command line.
+function commandText(v) {
+  if (typeof v === 'string') return v;
+  if (!Array.isArray(v)) return '';
+  return v.map((a) => (/^[\w@%+=:,./\\-]+$/.test(String(a)) ? String(a) : `'${String(a).replace(/'/g, "'\\''")}'`)).join(' ');
+}
+
+// File paths of an apply_patch text ("*** Add File: x" envelope of Codex, OpenCode, Devin) or of a
+// unified diff ("+++ b/x"). op: add | update | delete.
+export function patchPaths(text) {
+  const out = [];
+  const seen = new Set();
+  const add = (p, op) => {
+    const v = String(p).trim().replace(/^"(.*)"$/, '$1');
+    if (!v || v === '/dev/null' || seen.has(`${op}\u0000${v}`)) return;
+    seen.add(`${op}\u0000${v}`);
+    out.push({ path: v, op });
+  };
+  const s = String(text || '');
+  const envelope = /^\*\*\* (Begin Patch|(Add|Update|Delete) File:)/m.test(s);
+  for (const line of s.split(/\r?\n/)) {
+    let m = /^\*\*\* (Add|Update|Delete) File:\s*(.+)$/.exec(line);
+    if (m) {
+      add(m[2], m[1].toLowerCase());
+      continue;
+    }
+    m = /^\*\*\* Move to:\s*(.+)$/.exec(line);
+    if (m) {
+      add(m[1], 'add');
+      continue;
+    }
+    if (envelope) continue; // envelope bodies are +/-/space lines: "--- x" there is content
+    m = /^diff --git a\/(.+?) b\/(.+)$/.exec(line);
+    if (m) {
+      add(m[1], 'update');
+      add(m[2], 'update');
+      continue;
+    }
+    m = /^(?:\+\+\+|---) (?:[ab]\/)?([^\t]+?)(?:\t.*)?$/.exec(line);
+    if (m) add(m[1], 'update');
+  }
+  return out;
+}
+
+// One platform call -> Claude-style guard inputs.
+export function adaptInput(format, payload, { win = WIN, env = process.env } = {}) {
+  const p = isObj(payload) ? payload : {};
+  if (format === 'claude') return [p];
+  const roots = (v) => (Array.isArray(v) && typeof v[0] === 'string' ? v[0] : null);
+  const base = {
+    hook_event_name: 'PreToolUse',
+    session_id: String(p.session_id || p.sessionId || p.conversation_id || p.taskId || ''),
+    cwd: strOf(p, ['cwd']) || roots(p.workspace_roots) || roots(p.workspaceRoots) || (format === 'windsurf' ? env.DEVIN_PROJECT_DIR : null) || process.cwd(),
+  };
+  if (typeof p.agent_type === 'string' && p.agent_type) base.agent_type = p.agent_type;
+  const out = [];
+  // shell: bash | ps | auto (Windows shell not documented: both the Bash and the PowerShell reading must pass)
+  const shell = (cmd, mode, extra = {}) => {
+    const command = commandText(cmd);
+    if (!command) return;
+    const tools = mode === 'ps' ? ['PowerShell'] : mode === 'auto' && win ? ['Bash', 'PowerShell'] : ['Bash'];
+    for (const t of tools) out.push({ ...base, ...extra, tool_name: t, tool_input: { command } });
+  };
+  const file = (tool, filePath, extra = {}) => {
+    if (typeof filePath === 'string' && filePath) out.push({ ...base, tool_name: tool, tool_input: { ...extra, file_path: filePath } });
+  };
+  const patch = (text) => {
+    for (const f of patchPaths(text)) file(f.op === 'add' ? 'Write' : 'Edit', f.path, { content: '' });
+  };
+  const grep = (dir, glob) => out.push({ ...base, tool_name: 'Grep', tool_input: { pattern: '', path: typeof dir === 'string' && dir ? dir : undefined, glob: typeof glob === 'string' ? glob : undefined } });
+  const serena = (tool, args) => out.push({ ...base, tool_name: `mcp__serena__${tool}`, tool_input: isObj(decoded(args)) ? decoded(args) : {} });
+  const PATH_KEYS = ['file_path', 'filePath', 'path', 'target_file', 'absolute_path', 'absolutePath', 'notebook_path'];
+  const PATCH_KEYS = ['patch', 'patchText', 'input', 'diff', 'command', 'content'];
+  const editOrPatch = (tool, ti) => {
+    const f = strOf(ti, PATH_KEYS);
+    if (f) file(tool, f);
+    else patch(strOf(ti, PATCH_KEYS));
+  };
+  const name = String(p.tool_name || p.toolName || '');
+  const ti = decoded(p.tool_input !== undefined ? p.tool_input : p.toolArgs);
+  const t = isObj(ti) ? ti : {};
+
+  if (format === 'codex') {
+    // PreToolUse; Bash and apply_patch carry the command or the patch text in tool_input.command.
+    if (name === 'Bash') shell(t.command !== undefined ? t.command : t.cmd, 'auto');
+    else if (['apply_patch', 'Edit', 'Write'].includes(name)) editOrPatch(name === 'Write' ? 'Write' : 'Edit', t);
+    else if (name.startsWith('mcp__serena__')) serena(name.slice('mcp__serena__'.length), t);
+  } else if (format === 'copilot') {
+    // PascalCase PreToolUse: snake_case payload with Claude tool names (powershell is reported as Bash);
+    // camelCase preToolUse: {toolName, toolArgs} with runtime names.
+    const lower = name.toLowerCase();
+    const mcp = /^(?:mcp__serena__|serena\/|serena-)(.+)$/.exec(name);
+    if (['bash', 'shell'].includes(lower)) shell(t.command, 'auto');
+    else if (lower === 'powershell') shell(t.command, 'ps');
+    else if (['read', 'view'].includes(lower)) file('Read', strOf(t, PATH_KEYS));
+    else if (['write', 'create'].includes(lower)) file('Write', strOf(t, PATH_KEYS));
+    else if (['edit', 'multiedit', 'str_replace_editor', 'apply_patch', 'notebookedit'].includes(lower)) editOrPatch('Edit', t);
+    else if (['grep', 'rg'].includes(lower)) grep(strOf(t, ['path']), strOf(t, ['glob', 'include']));
+    else if (mcp) serena(mcp[1], t);
+  } else if (format === 'cursor') {
+    const ev = String(p.hook_event_name || '');
+    if (ev === 'beforeShellExecution' || (!name && typeof p.command === 'string' && ev !== 'beforeMCPExecution')) shell(p.command, 'auto');
+    else if (ev === 'beforeReadFile') file('Read', strOf(p, ['file_path', 'path']));
+    else if (ev === 'beforeMCPExecution') {
+      const tool = name.replace(/^MCP:/, '').replace(/^mcp__serena__/, '');
+      if (p.mcp_server_name === 'serena' || name.startsWith('mcp__serena__')) serena(tool, p.tool_input);
+    } else if (name === 'Shell') shell(t.command, 'auto');
+    else if (name === 'Read') file('Read', strOf(t, PATH_KEYS));
+    else if (name === 'Write' || name === 'Delete') editOrPatch(name === 'Write' ? 'Write' : 'Edit', t);
+    else if (name === 'Grep') grep(strOf(t, ['path', 'target_directory']), strOf(t, ['glob', 'include']));
+  } else if (format === 'gemini') {
+    // BeforeTool. The shell tool runs "powershell.exe -NoProfile -Command" on Windows, bash -c elsewhere.
+    const mcp = /^mcp_serena_(.+)$/.exec(name);
+    if (name === 'run_shell_command') {
+      const dir = strOf(t, ['dir_path', 'directory']);
+      shell(t.command, win ? 'ps' : 'bash', dir ? { cwd: path.resolve(base.cwd, dir) } : {});
+    } else if (name === 'write_file') file('Write', strOf(t, PATH_KEYS));
+    else if (name === 'replace' || name === 'edit') file('Edit', strOf(t, PATH_KEYS));
+    else if (name === 'read_file') file('Read', strOf(t, PATH_KEYS));
+    else if (name === 'read_many_files') {
+      for (const f of [].concat(t.paths || [], t.include || [])) if (typeof f === 'string') file('Read', f);
+    } else if (name === 'grep_search' || name === 'search_file_content') grep(strOf(t, ['dir_path', 'path']), strOf(t, ['include', 'glob']));
+    else if (mcp) serena(mcp[1], t);
+  } else if (format === 'windsurf') {
+    // Devin Local / Devin CLI PreToolUse (Windsurf is now Devin Desktop).
+    if (name === 'exec') shell(t.command !== undefined ? t.command : t.cmd, 'auto');
+    else if (name === 'write_to_process') shell(strOf(t, ['input', 'text', 'data']), 'auto');
+    else if (name === 'read' || name === 'notebook_read') file('Read', strOf(t, PATH_KEYS));
+    else if (name === 'write') file('Write', strOf(t, PATH_KEYS));
+    else if (name === 'edit' || name === 'notebook_edit') editOrPatch('Edit', t);
+    else if (name === 'apply_patch') editOrPatch('Edit', t);
+    else if (name === 'grep') grep(strOf(t, ['path']), strOf(t, ['glob', 'include']));
+    else if (name.startsWith('mcp__serena__')) serena(name.slice('mcp__serena__'.length), t);
+  } else if (format === 'cline') {
+    // File hook "PreToolUse": {preToolUse: {toolName, parameters}}; the CLI also sends tool_call.
+    const pre = isObj(p.preToolUse) ? p.preToolUse : isObj(p.tool_call) ? { toolName: p.tool_call.name, parameters: p.tool_call.input } : {};
+    const tool = String(pre.toolName || '');
+    const raw = decoded(pre.parameters);
+    const params = {};
+    if (isObj(raw)) for (const [k, v] of Object.entries(raw)) params[k] = decoded(v);
+    const each = (v) => (Array.isArray(v) ? v : v === undefined ? [] : [v]);
+    if (['execute_command', 'run_commands', 'run_command'].includes(tool)) {
+      for (const c of [...each(params.command), ...each(params.commands)]) shell(isObj(c) ? c.command : c, 'auto');
+    } else if (['write_to_file', 'new_file'].includes(tool)) file('Write', strOf(params, PATH_KEYS));
+    else if (['replace_in_file', 'editor', 'edit_file', 'apply_patch'].includes(tool)) editOrPatch('Edit', params);
+    else if (['read_file', 'read_files'].includes(tool)) {
+      for (const f of [...each(params.path), ...each(params.paths), ...each(params.files), ...each(params.file_path)]) file('Read', isObj(f) ? f.path : f);
+    } else if (['search_files', 'search_codebase'].includes(tool)) grep(strOf(params, ['path']), strOf(params, ['file_pattern', 'glob']));
+    else if (tool === 'use_mcp_tool' && params.server_name === 'serena' && typeof params.tool_name === 'string') serena(params.tool_name, params.arguments);
+  } else if (format === 'opencode') {
+    // Payload written by the exported plugin: {tool_name: input.tool, tool_input: output.args, cwd}.
+    const mcp = /^serena_(.+)$/.exec(name);
+    if (name === 'bash') shell(t.command, 'auto');
+    else if (name === 'write') file('Write', strOf(t, PATH_KEYS));
+    else if (['edit', 'multiedit'].includes(name)) file('Edit', strOf(t, PATH_KEYS));
+    else if (['patch', 'apply_patch'].includes(name)) editOrPatch('Edit', t);
+    else if (name === 'read') file('Read', strOf(t, PATH_KEYS));
+    else if (name === 'grep') grep(strOf(t, ['path']), strOf(t, ['include', 'glob']));
+    else if (mcp) serena(mcp[1], t);
+  }
+  return out;
+}
+
+// The platform's answer for a decision (message: null = allow). warn: an optional stderr note.
+export function adapterOutput(format, message, { warn = '' } = {}) {
+  const deny = message !== null && message !== undefined;
+  const line = deny ? `${message}\n` : '';
+  switch (format) {
+    case 'cursor': // permission hooks must print valid JSON; exit 2 also denies
+      return deny
+        ? { stdout: `${JSON.stringify({ permission: 'deny', user_message: message, agent_message: message })}\n`, stderr: line, code: 2 }
+        : { stdout: '{"permission":"allow"}\n', stderr: warn, code: 0 };
+    case 'gemini': // exit 2 = system block, stderr is the reason; {} = no decision (normal confirmations apply)
+      return deny ? { stdout: '', stderr: line, code: 2 } : { stdout: '{}\n', stderr: warn, code: 0 };
+    case 'windsurf': // exit 2 blocks; "approve" would skip Devin's own permission check, so allow prints nothing
+      return deny ? { stdout: `${JSON.stringify({ decision: 'block', reason: message })}\n`, stderr: line, code: 2 } : { stdout: '', stderr: warn, code: 0 };
+    case 'cline': // stdout JSON is required; cancel: true blocks
+      return deny ? { stdout: `${JSON.stringify({ cancel: true, errorMessage: message })}\n`, stderr: '', code: 0 } : { stdout: '{"cancel":false}\n', stderr: warn, code: 0 };
+    default: // claude, codex, copilot, opencode: exit 2 + one stderr line blocks; exit 0 allows
+      return { stdout: '', stderr: deny ? line : warn, code: deny ? 2 : 0 };
+  }
+}
+
+function logBlock(res, input, format = 'claude') {
   try {
     const file = process.env.HADES_GUARD_LOG || path.join(ENGINE_DIR, '.hades', 'guard.log');
     fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -3405,6 +3638,7 @@ function logBlock(res, input) {
       .replace(/[A-Za-z0-9+/_=-]{32,}/g, '***')
       .slice(0, 300);
     const line = { at: new Date().toISOString(), rule: res.id, tool: input && input.tool_name, agent: (input && input.agent_type) || null, session: (input && input.session_id) || null, cwd: (input && input.cwd) || null, subject };
+    if (format !== 'claude') line.format = format;
     fs.appendFileSync(file, `${JSON.stringify(line)}\n`);
   } catch {
     /* best effort */
@@ -3421,6 +3655,23 @@ function main() {
     process.stdout.write(policyFileText());
     return;
   }
+  // --format <platform> (or --format=<platform>): the stdin/stdout contract of another coding agent.
+  const argv = process.argv.slice(2);
+  const fi = argv.indexOf('--format');
+  const fe = argv.find((a) => a.startsWith('--format='));
+  const format = fi >= 0 ? String(argv[fi + 1] || '') : fe ? fe.slice('--format='.length) : 'claude';
+  if (!GUARD_FORMATS.includes(format)) {
+    // A misregistered hook must not silently allow everything.
+    process.stderr.write(`HADES guard: guard.config: unknown --format "${format}" (one of ${GUARD_FORMATS.join(', ')}); call blocked. Re-run "hades export <target>".\n`);
+    process.exitCode = 2;
+    return;
+  }
+  const respond = (msg, warn = '') => {
+    const o = adapterOutput(format, msg, { warn });
+    if (o.stdout) process.stdout.write(o.stdout);
+    if (o.stderr) process.stderr.write(o.stderr);
+    process.exitCode = o.code;
+  };
   let raw = '';
   try {
     raw = fs.readFileSync(0, 'utf8');
@@ -3428,33 +3679,39 @@ function main() {
     raw = '';
   }
   if (String(process.env.HADES_GUARD || '').toLowerCase() === 'off') {
-    process.stderr.write('HADES guard: off (HADES_GUARD=off); no checks applied. Owner-only debugging aid.\n');
-    process.exitCode = 0;
+    respond(null, 'HADES guard: off (HADES_GUARD=off); no checks applied. Owner-only debugging aid.\n');
     return;
   }
   let input = null;
+  let calls = [];
   try {
     input = JSON.parse(raw.replace(/^\uFEFF/, ''));
-    const res = evaluate(input);
-    if (res) {
-      logBlock(res, input);
-      process.stderr.write(`${res.message}\n`);
-      process.exitCode = 2;
-      return;
+    calls = format === 'claude' ? [input] : adaptInput(format, input);
+    for (const call of calls) {
+      const res = evaluate(call);
+      if (res) {
+        logBlock(res, call, format);
+        respond(res.message);
+        return;
+      }
     }
-    process.exitCode = 0;
+    respond(null);
   } catch (err) {
     // Fail closed when the call could touch something the guard protects (high-risk keyword in the
     // command or path); fail open otherwise so a guard bug cannot brick ordinary work.
-    const ti = input && input.tool_input && typeof input.tool_input === 'object' ? input.tool_input : null;
-    const subject = ti ? [ti.command, ti.file_path, ti.notebook_path, ti.path, ti.glob, ti.relative_path, ti.target_relative_path, ti.code, ti.project].filter((v) => typeof v === 'string').join(' ') : input ? '' : raw;
+    const fields = (ti) => (ti && typeof ti === 'object' ? [ti.command, ti.file_path, ti.notebook_path, ti.path, ti.glob, ti.relative_path, ti.target_relative_path, ti.code, ti.project].filter((v) => typeof v === 'string').join(' ') : '');
+    let subject;
+    if (format === 'claude') {
+      const ti = input && input.tool_input && typeof input.tool_input === 'object' ? input.tool_input : null;
+      subject = ti ? fields(ti) : input ? '' : raw;
+    } else {
+      subject = calls.length ? calls.map((c) => fields(c && c.tool_input)).join(' ') : input ? JSON.stringify(input) : raw;
+    }
     if (HIGH_RISK.test(subject)) {
-      process.stderr.write(`HADES guard: guard.error: internal error (${String((err && err.message) || err).slice(0, 120)}) while checking a call that may touch protected data; blocked to stay safe. Retry with a simpler command; report the guard error to the owner.\n`.replace(/\s+/g, ' ').trim() + '\n');
-      process.exitCode = 2;
+      respond(`HADES guard: guard.error: internal error (${String((err && err.message) || err).slice(0, 120)}) while checking a call that may touch protected data; blocked to stay safe. Retry with a simpler command; report the guard error to the owner.`.replace(/\s+/g, ' ').trim());
       return;
     }
-    process.stderr.write(`HADES guard: warning: internal error (${String((err && err.message) || err).slice(0, 200)}); call allowed (fail-open).\n`);
-    process.exitCode = 0;
+    respond(null, `HADES guard: warning: internal error (${String((err && err.message) || err).slice(0, 200)}); call allowed (fail-open).\n`);
   }
 }
 

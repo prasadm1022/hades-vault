@@ -122,6 +122,9 @@ the guard (deny globs cannot exempt `.env.example`).
   Windows the guard is the main boundary.
 - Prompt injection from repositories, web pages or tool output can still mislead a model inside its
   allowed scope. Agents run with your credentials.
+- **Other coding agents** (`hades export`, [`other-agents.md`](other-agents.md)): the guard runs as the
+  platform's pre-tool hook where one is documented, without role write scopes or the deny rules of
+  `hades install`; Roo Code, Aider, generic AGENTS.md tools and OpenCode 2 have no guard at all.
 - A change can pass every gate and still be wrong in production. Review diffs before pushing; keep
   backups.
 
