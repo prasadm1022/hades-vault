@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report vulnerabilities privately through GitHub's **Report a vulnerability** button
-(Security → Advisories) on [this repository](https://github.com/prasadm1022/hades/security/advisories/new).
+(Security → Advisories) on [this repository](https://github.com/prasadm1022/hades-vault/security/advisories/new).
 Do not put details of a security problem in a public issue. Include the affected version or
 commit, steps to reproduce, and the impact you expect. You will get an acknowledgement within
 seven days.

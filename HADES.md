@@ -10,11 +10,11 @@ tools (CLI, scanners, MCP servers), the guards (hooks) and the memory (the vault
 | Repository | Contents |
 |---|---|
 | engine (this repo, MIT) | agents, skills, playbooks, company policies, CLI, hooks, templates, vendored tools |
-| vault (private, separate) | registry, organizations, teams, knowledge, task records |
+| vault (private; default `<engine>/.vault`, git-ignored by the engine, its own git repository) | registry, organizations, teams, knowledge, task records |
 
 `hades.config.json` (engine root, git-ignored: `vault`, `workspace`, optional `aws` with `profile` or
-`profiles`, `region`, `read_only`) connects them (`docs/file-formats.md`). The engine never holds
-client data; the vault never holds engine code. Requires Node >= 22.
+`profiles`, `region`, `read_only`) connects them (`docs/file-formats.md`). The engine repository never
+holds client data (a vault inside the engine is git-ignored); the vault never holds engine code. Requires Node >= 22.
 
 ## Organisation
 

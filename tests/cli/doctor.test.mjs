@@ -351,3 +351,117 @@ describe('runChecks', () => {
     }
   });
 });
+
+describe('vault location (a vault inside the engine must be git-ignored)', () => {
+  // git answers keyed by the arguments after "-C <cwd>".
+  const gitProbe = (answers) => ({
+    calls: [],
+    git(cwd, ...args) {
+      this.calls.push([cwd, ...args]);
+      const a = answers[args[0]];
+      return typeof a === 'function' ? a(cwd, ...args) : a || { code: 128, stdout: '', stderr: 'not a repo' };
+    },
+  });
+  const repo = { 'rev-parse': { code: 0, stdout: 'true\n', stderr: '' } };
+  const ctx = (vault) => ({ engine: '/w/hades-vault', vault, workspace: '/w', configFile: '/w/hades-vault/hades.config.json', config: {}, registry: { version: 3 } });
+
+  test('a vault outside the engine needs no check', () => {
+    const p = gitProbe({});
+    assert.deepEqual(doc.checkVaultPlacement(ctx('/w/private-vault'), p), []);
+    assert.equal(p.calls.length, 0);
+  });
+
+  test('<engine>/.vault ignored by the engine repository is OK', () => {
+    const p = gitProbe({ ...repo, 'check-ignore': { code: 0, stdout: '', stderr: '' } });
+    const r = doc.checkVaultPlacement(ctx('/w/hades-vault/.vault'), p);
+    assert.deepEqual(r.map((c) => c.status), ['OK']);
+    assert.match(doc.formatCheck(r[0]), /^OK vault location: \.vault inside the engine, git-ignored/);
+    // trailing slash: the directory-only pattern "/.vault/" also matches a .vault that does not exist yet
+    assert.deepEqual(p.calls[1].slice(1), ['check-ignore', '-q', '--', '.vault/']);
+  });
+
+  test('a vault inside the engine that the engine repository does NOT ignore is a FAIL', () => {
+    const p = gitProbe({ ...repo, 'check-ignore': { code: 1, stdout: '', stderr: '' } });
+    const r = doc.checkVaultPlacement(ctx('/w/hades-vault/.vault'), p);
+    assert.deepEqual(r.map((c) => c.status), ['FAIL']);
+    assert.match(doc.formatCheck(r[0]), /NOT git-ignored.*-> add "\/\.vault\/" to (?:[A-Z]:)?\/w\/hades-vault\/\.gitignore$/);
+    const custom = doc.checkVaultPlacement(ctx('/w/hades-vault/data/clients'), p);
+    assert.match(doc.formatCheck(custom[0]), /^FAIL vault location: data\/clients is inside the engine/);
+  });
+
+  test('an engine that is not a git repository cannot commit the vault', () => {
+    const r = doc.checkVaultPlacement(ctx('/w/hades-vault/.vault'), gitProbe({}));
+    assert.deepEqual(r.map((c) => c.status), ['OK']);
+  });
+
+  test('git missing is a WARN, not an OK', () => {
+    const p = gitProbe({ 'rev-parse': { code: 127, stdout: '', stderr: 'spawnSync git ENOENT' } });
+    const r = doc.checkVaultPlacement(ctx('/w/hades-vault/.vault'), p);
+    assert.deepEqual(r.map((c) => c.status), ['WARN']);
+    assert.match(r[0].detail, /git not found/);
+  });
+
+  test('an unexpected git error is a WARN; the engine folder itself is a FAIL', () => {
+    const p = gitProbe({ ...repo, 'check-ignore': { code: 128, stdout: '', stderr: 'fatal' } });
+    assert.deepEqual(doc.checkVaultPlacement(ctx('/w/hades-vault/.vault'), p).map((c) => c.status), ['WARN']);
+    assert.deepEqual(doc.checkVaultPlacement(ctx('/w/hades-vault'), p).map((c) => c.status), ['FAIL']);
+  });
+
+  test('the legacy <engine>/vault gets a WARN suggesting the move to .vault', () => {
+    const p = gitProbe({ ...repo, 'check-ignore': { code: 0, stdout: '', stderr: '' } });
+    const r = doc.checkVaultPlacement(ctx('/w/hades-vault/vault'), p);
+    assert.deepEqual(r.map((c) => c.status), ['OK', 'WARN']);
+    assert.match(doc.formatCheck(r[1]), /legacy location vault .* -> move the folder to (?:[A-Z]:)?\/w\/hades-vault\/\.vault, then hades init --vault (?:[A-Z]:)?\/w\/hades-vault\/\.vault$/);
+  });
+
+  test('against a real git repository', (t) => {
+    const probe = doc.defaultProbe();
+    if (probe.git('.', '--version').code !== 0 && !probe.find('git')) return t.skip('git not available');
+    const tmp = s(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'hades-doctor-ign-'))));
+    try {
+      const engine = `${tmp}/engine`;
+      fs.mkdirSync(`${engine}/.vault`, { recursive: true });
+      probe.git(engine, 'init', '-q');
+      const c = { engine, vault: `${engine}/.vault`, workspace: tmp, configFile: '', config: {}, registry: null };
+      assert.equal(doc.checkVaultPlacement(c, probe)[0].status, 'FAIL', 'not ignored yet');
+      fs.writeFileSync(`${engine}/.gitignore`, '/.vault/\n');
+      assert.equal(doc.checkVaultPlacement(c, probe)[0].status, 'OK', 'ignored');
+      // the vault has no repository of its own yet: git commands in it act on the engine repository
+      const own = doc.checkVaultPlacement(c, probe);
+      assert.deepEqual(own.map((x) => x.status), ['OK', 'FAIL']);
+      assert.match(doc.formatCheck(own[1]), /^FAIL vault repository: \.vault is not its own git repository.*-> hades init/);
+      probe.git(c.vault, 'init', '-q');
+      assert.deepEqual(doc.checkVaultPlacement(c, probe).map((x) => x.status), ['OK'], 'its own repository');
+      // a fresh clone before "hades init": .vault does not exist yet and is still reported as ignored
+      fs.rmSync(c.vault, { recursive: true, force: true });
+      assert.deepEqual(doc.checkVaultPlacement(c, probe).map((x) => x.status), ['OK'], 'missing .vault is still ignored');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('vault notes that name an old engine folder', () => {
+  test('notes scaffolded for a renamed engine get a WARN; current ones none', () => {
+    const tmp = s(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'hades-doctor-notes-'))));
+    try {
+      const engine = `${tmp}/hades-vault`;
+      const vault = `${engine}/.vault`;
+      fs.mkdirSync(`${vault}/company/playbooks`, { recursive: true });
+      const old = `${tmp}/hades`;
+      fs.writeFileSync(`${vault}/CLAUDE.md`, `# Vault\n\nPolicies live in the engine at \`${old}\`.\n`);
+      fs.writeFileSync(`${vault}/README.md`, `Engine: \`${old}\` (policies)\n\n\`node ${old}/bin/hades.mjs status\`\n`);
+      fs.writeFileSync(`${vault}/company/playbooks/README.md`, `see \`${engine}/playbooks/learn-technology.md\`\n`);
+      const c = { engine, vault };
+      const r = doc.checkVaultNotes(c);
+      assert.deepEqual(r.map((x) => x.status), ['WARN']);
+      assert.match(doc.formatCheck(r[0]), /CLAUDE\.md, README\.md name the engine as .*\/hades \(the engine is .*\/hades-vault\) -> replace .*\/hades with .*\/hades-vault/);
+      fs.writeFileSync(`${vault}/CLAUDE.md`, `Policies live in the engine at \`${engine}\`.\n`);
+      fs.writeFileSync(`${vault}/README.md`, `Engine: \`${engine}\`\n`);
+      assert.deepEqual(doc.checkVaultNotes(c), []);
+      assert.deepEqual(doc.checkVaultNotes({ engine, vault: `${tmp}/none` }), [], 'no notes, no check');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});

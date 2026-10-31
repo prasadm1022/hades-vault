@@ -117,17 +117,17 @@ describe('paths with whitespace are quoted in rendered files', () => {
 
   test('quoteSpacedPaths', () => {
     const q = (t) => ins.quoteSpacedPaths(t, vars);
-    assert.equal(q('CLI: node C:/Users/Jane Doe/git/hades/bin/hades.mjs task show x'), 'CLI: node "C:/Users/Jane Doe/git/hades/bin/hades.mjs" task show x');
+    assert.equal(q('CLI: node C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs task show x'), 'CLI: node "C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs" task show x');
     assert.equal(q('Read `C:/Users/Jane Doe/git/hades/HADES.md`.'), 'Read `"C:/Users/Jane Doe/git/hades/HADES.md"`.');
     assert.equal(q('see C:/Users/Jane Doe/git/hades/HADES.md.'), 'see "C:/Users/Jane Doe/git/hades/HADES.md".');
     assert.equal(q('git -C C:/Users/Jane Doe/git/hades-vault add <task folder>'), 'git -C "C:/Users/Jane Doe/git/hades-vault" add <task folder>');
     assert.equal(q('Task folder: C:/Users/Jane Doe/git/hades-vault/<team_dir>/tasks/<task-id>-<slug>/'), 'Task folder: "C:/Users/Jane Doe/git/hades-vault/<team_dir>/tasks/<task-id>-<slug>/"');
     // already quoted (templates may quote) and JSON args stay as they are
-    assert.equal(q('node "C:/Users/Jane Doe/git/hades/bin/hades.mjs" x'), 'node "C:/Users/Jane Doe/git/hades/bin/hades.mjs" x');
-    assert.equal(q('args: ["C:/Users/Jane Doe/git/hades/bin/hades.mjs", "mcp", "serena"]'), 'args: ["C:/Users/Jane Doe/git/hades/bin/hades.mjs", "mcp", "serena"]');
+    assert.equal(q('node "C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs" x'), 'node "C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs" x');
+    assert.equal(q('args: ["C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs", "mcp", "serena"]'), 'args: ["C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs", "mcp", "serena"]');
     // paths without whitespace are never changed
     const plain = { HADES_HOME: 'C:/git/hades', HADES_VAULT: 'C:/git/vault', HADES_WORKSPACE: 'C:/git' };
-    assert.equal(ins.quoteSpacedPaths('node C:/git/hades/bin/hades.mjs x', plain), 'node C:/git/hades/bin/hades.mjs x');
+    assert.equal(ins.quoteSpacedPaths('node C:/git/hades-vault/bin/hades.mjs x', plain), 'node C:/git/hades-vault/bin/hades.mjs x');
   });
 
   test('installed agents and skills carry a CLI line that is one shell word', () => {

@@ -4,6 +4,7 @@
 import { test, describe, after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { runCli, tempDir, cleanup, git, ENGINE, REAL_CONFIG } from '../helpers/vault.mjs';
 
 let realBefore;
@@ -158,5 +159,161 @@ describe('hades init', () => {
     assert.equal(r.code, 0);
     assert.match(r.out, /^Usage: hades init/);
     assert.ok(!fs.existsSync(s.configFile));
+  });
+});
+
+// A copy of the engine's CLI (bin, lib, templates) in a temp folder, so "hades init" without --vault
+// can scaffold <engine>/.vault there. The real engine's vault is never touched. No HADES_* variable
+// reaches the child: the copy's own hades.config.json and default vault are used.
+function tempEngine({ gitignore = '/.vault/\n/vault/\n', repo = true } = {}) {
+  const root = tempDir('hades-engine-');
+  const engine = `${root}/hades-vault`;
+  for (const d of ['bin', 'lib', 'templates']) fs.cpSync(`${ENGINE}/${d}`, `${engine}/${d}`, { recursive: true });
+  fs.copyFileSync(`${ENGINE}/package.json`, `${engine}/package.json`);
+  if (repo) git(engine, 'init', '-q');
+  if (gitignore !== null) fs.writeFileSync(`${engine}/.gitignore`, gitignore);
+  const env = {};
+  for (const [k, v] of Object.entries(process.env)) if (!/^HADES_/i.test(k)) env[k] = v;
+  const cli = (args, extra = {}) => {
+    const r = spawnSync(process.execPath, [`${engine}/bin/hades.mjs`, ...args], { encoding: 'utf8', cwd: root, env: { ...env, ...extra }, windowsHide: true });
+    return { code: r.status, out: r.stdout || '', err: r.stderr || '', json: () => JSON.parse(r.stdout) };
+  };
+  return { root, engine, cli, vault: `${engine}/.vault`, configFile: `${engine}/hades.config.json` };
+}
+
+describe('hades init: the default vault is <engine>/.vault', () => {
+  test('no --vault scaffolds <engine>/.vault as its own git repository, ignored by the engine', () => {
+    const e = tempEngine();
+    const r = e.cli(['init', '--json']);
+    assert.equal(r.code, 0, r.err);
+    const d = r.json();
+    assert.equal(d.vault, e.vault);
+    assert.equal(d.scaffolded, true);
+    assert.equal(d.git, 'init');
+    assert.equal(d.workspace, e.root, 'workspace defaults to the engine parent');
+    assert.ok(fs.existsSync(`${e.vault}/registry.json`));
+    assert.ok(fs.existsSync(`${e.vault}/.git`), 'its own repository');
+    assert.equal(git(e.vault, 'rev-parse', '--show-toplevel').stdout.trim().toLowerCase(), e.vault.toLowerCase());
+    assert.equal(git(e.engine, 'check-ignore', '-q', '.vault').status, 0, 'git-ignored by the engine');
+    assert.doesNotMatch(git(e.engine, 'status', '--porcelain', '-uall').stdout, /\.vault/,'the engine repository does not see the vault');
+    // stored relative to the engine, so renaming the engine folder keeps the vault
+    assert.deepEqual(JSON.parse(fs.readFileSync(e.configFile, 'utf8')), { vault: '.vault', workspace: e.root });
+    const again = e.cli(['init', '--json']);
+    assert.equal(again.code, 0, again.err);
+    assert.equal(again.json().vault, e.vault, 'the relative config path resolves against the engine');
+    assert.equal(again.json().scaffolded, false);
+  });
+
+  test('a renamed engine folder still finds its .vault through the relative config path', () => {
+    const e = tempEngine();
+    assert.equal(e.cli(['init']).code, 0);
+    const moved = `${e.root}/renamed`;
+    fs.renameSync(e.engine, moved);
+    const env = {};
+    for (const [k, v] of Object.entries(process.env)) if (!/^HADES_/i.test(k)) env[k] = v;
+    const r = spawnSync(process.execPath, [`${moved}/bin/hades.mjs`, 'init', '--json'], { encoding: 'utf8', cwd: e.root, env, windowsHide: true });
+    assert.equal(r.status, 0, r.stderr);
+    const d = JSON.parse(r.stdout);
+    assert.equal(d.vault, `${moved}/.vault`);
+    assert.equal(d.scaffolded, false);
+  });
+
+  test('a vault inside the engine gets its own repository even when the engine does not ignore it', () => {
+    const e = tempEngine({ gitignore: null });
+    const r = e.cli(['init', '--json']);
+    assert.equal(r.code, 0, r.err);
+    assert.equal(r.json().git, 'init');
+    assert.ok(fs.existsSync(`${e.vault}/.git`));
+  });
+
+  test('an explicit --vault outside the engine still works and is stored absolute', () => {
+    const e = tempEngine();
+    const v = `${e.root}/elsewhere/vault`;
+    const r = e.cli(['init', '--vault', v, '--json']);
+    assert.equal(r.code, 0, r.err);
+    assert.equal(r.json().vault, v);
+    assert.equal(JSON.parse(fs.readFileSync(e.configFile, 'utf8')).vault, v);
+    assert.ok(!fs.existsSync(e.vault), 'no default vault created');
+  });
+
+  test('a legacy <engine>/vault with a registry is kept while .vault does not exist', () => {
+    const e = tempEngine();
+    fs.mkdirSync(`${e.engine}/vault`, { recursive: true });
+    const reg = { version: 3, organizations: {}, teams: {} };
+    fs.writeFileSync(`${e.engine}/vault/registry.json`, JSON.stringify(reg));
+    const r = e.cli(['init', '--json']);
+    assert.equal(r.code, 0, r.err);
+    assert.equal(r.json().vault, `${e.engine}/vault`);
+    assert.equal(r.json().scaffolded, false);
+    assert.ok(!fs.existsSync(e.vault), 'no .vault scaffolded next to the legacy vault');
+    assert.equal(JSON.parse(fs.readFileSync(e.configFile, 'utf8')).vault, 'vault');
+  });
+});
+
+describe('hades init: a vault inside the engine is always its own repository', () => {
+  test('an existing .vault that lost its .git gets git init again (never the engine repository)', () => {
+    const e = tempEngine();
+    assert.equal(e.cli(['init']).code, 0);
+    fs.rmSync(`${e.vault}/.git`, { recursive: true, force: true });
+    assert.equal(git(e.vault, 'rev-parse', '--show-toplevel').stdout.trim().toLowerCase(), e.engine.toLowerCase(), 'precondition: git sees the engine repository');
+    const r = e.cli(['init', '--json']);
+    assert.equal(r.code, 0, r.err);
+    assert.equal(r.json().scaffolded, false);
+    assert.equal(r.json().git, 'init');
+    assert.equal(git(e.vault, 'rev-parse', '--show-toplevel').stdout.trim().toLowerCase(), e.vault.toLowerCase());
+    const text = e.cli(['init']);
+    assert.equal(text.code, 0, text.err);
+    assert.doesNotMatch(text.out, /note +.*no git repository/, 'second run: nothing to fix');
+    assert.equal(e.cli(['init', '--json']).json().git, 'repo');
+  });
+
+  test('a moved-in vault without .git (git-ignored by the engine) gets its own repository', () => {
+    const e = tempEngine();
+    fs.mkdirSync(e.vault, { recursive: true });
+    fs.writeFileSync(`${e.vault}/registry.json`, JSON.stringify({ version: 3, organizations: {}, teams: {} }));
+    const r = e.cli(['init']);
+    assert.equal(r.code, 0, r.err);
+    assert.match(r.out, /note +.*had no git repository of its own.*ran git init/);
+    assert.ok(fs.existsSync(`${e.vault}/.git`));
+  });
+});
+
+describe('hades init: relative paths are relative to the engine', () => {
+  test('--vault .vault from another folder is <engine>/.vault', () => {
+    const e = tempEngine();
+    const r = e.cli(['init', '--vault', '.vault', '--json']);
+    assert.equal(r.code, 0, r.err);
+    assert.equal(r.json().vault, e.vault);
+    assert.ok(!fs.existsSync(`${e.root}/.vault`), 'no stray vault in the current folder');
+    assert.equal(JSON.parse(fs.readFileSync(e.configFile, 'utf8')).vault, '.vault');
+  });
+
+  test('a relative HADES_VAULT is relative to the engine too', () => {
+    const e = tempEngine();
+    const r = e.cli(['init', '--json'], { HADES_VAULT: '.vault' });
+    assert.equal(r.code, 0, r.err);
+    assert.equal(r.json().vault, e.vault);
+    assert.ok(!fs.existsSync(`${e.root}/.vault`));
+  });
+
+  test('the engine folder itself (any letter case) is refused', () => {
+    const e = tempEngine();
+    for (const v of [e.engine, process.platform === 'win32' ? e.engine.toUpperCase() : e.engine, '.', e.root]) {
+      const r = e.cli(['init', '--vault', v]);
+      assert.equal(r.code, 1, `${v}: ${r.out}`);
+      assert.match(r.err, /cannot be the engine folder/);
+    }
+    assert.ok(!fs.existsSync(e.configFile), 'nothing written');
+  });
+
+  test('repointing away from a vault that still has a registry prints a note', () => {
+    const e = tempEngine();
+    assert.equal(e.cli(['init']).code, 0);
+    const other = `${e.root}/other-vault`;
+    const r = e.cli(['init', '--vault', other]);
+    assert.equal(r.code, 0, r.err);
+    assert.match(r.out, /note +the config pointed at .*\/\.vault, which still holds a registry\.json/);
+    const json = e.cli(['init', '--json']).json();
+    assert.deepEqual(json.notes, [], 'no note once the config is unchanged');
   });
 });

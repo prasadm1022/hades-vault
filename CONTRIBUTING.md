@@ -16,13 +16,13 @@ run are the most welcome.
   which command, and the CLI should record the result.
 - **Safety rules are code.** Anything that must never happen belongs in `hooks/guard.mjs` (with
   tests), not only in a prompt.
-- **No private data.** Examples use neutral names (acme, portal). Never commit a vault.
+- **No private data.** Examples use neutral names (acme, portal). Never commit a vault (`.vault/` and `vault/` are git-ignored; keep it that way).
 
 ## Development
 
 ```bash
-git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades.git
-cd hades
+git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades-vault.git
+cd hades-vault
 npm test
 node bin/hades.mjs doctor
 ```

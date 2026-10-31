@@ -5,6 +5,54 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+### Changed (layout and naming)
+- The repository is renamed **hades-vault** (`https://github.com/prasadm1022/hades-vault`;
+  `package.json` name `hades-vault`, the CLI stays `hades`): HADES, the shareable agentic platform,
+  plus your vault, the private local knowledge base. Clone it into `~/code/hades-vault`.
+- The default vault is `<engine>/.vault` (was `<engine>/vault`; the docs recommended a sibling
+  `../my-vault`). The engine's `.gitignore` ignores `/.vault/` and `/vault/`; `hades init` without
+  `--vault` scaffolds `.vault/` and always makes a vault inside the engine its own git repository.
+  Back it up after a first commit (`git -C .vault add -A && git -C .vault commit -m "Initial vault"`,
+  then `git -C .vault remote add origin <private-url>` and `push -u origin HEAD`). A custom vault
+  (`hades init --vault <path>`, `HADES_VAULT`, `hades.config.json`) still works.
+- Relative `vault`/`workspace` paths in `hades.config.json` resolve against the engine folder (CLI
+  and guard); `hades init` stores a vault inside the engine as `".vault"`, so renaming the engine
+  folder keeps it.
+- Backward compatible: without a configured vault, a legacy `<engine>/vault` holding a
+  `registry.json` is still used while `<engine>/.vault` does not exist; `hades doctor` WARNs.
+- `hades doctor` checks the vault location: a vault inside the engine that the engine repository
+  does not git-ignore is a FAIL.
+- Guard: a vault inside the engine is the vault, not engine code. Role agents write it as before;
+  state files, mass deletes and Serena `activate_project` stay blocked; `scope.engine` and
+  self-protection still cover every other engine file; the engine's `*credentials*.md` secret-name
+  exemption no longer extends to a vault inside it. Tests: `tests/hooks/guard-engine-vault.test.mjs`.
+- `HADES_DEFAULT_VAULT` replaces the built-in default (the test helpers point it at a missing folder,
+  so no test reaches a real vault).
+- Migration: move the vault folder (with its `.git`) to `<engine>/.vault` and run
+  `hades init --vault .vault` (or set `"vault": ".vault"` in `hades.config.json` by hand), then
+  `hades install`; or keep it where it is. Rename the engine folder from a terminal with no agent
+  session open and re-run `install` (and `export`) right after the rename.
+- Relative `--vault`/`--workspace` flags and a relative `HADES_VAULT`/`HADES_WORKSPACE` resolve
+  against the engine folder, like the config values (`hades init --vault .vault` from any folder is
+  `<engine>/.vault`). `hades init` refuses the engine folder itself (any letter case), notes when it
+  repoints away from a vault that still holds a registry, and runs `git init` in an existing vault
+  inside the engine (or git-ignored by its surrounding repository) that has no repository of its own
+  (`"git": "repo"` for a vault that already is one).
+- `hades doctor`: the git-ignore check also holds before `.vault` exists (fresh clone); a vault
+  inside the engine that is not its own git repository is a FAIL ("vault repository"); git missing
+  is a WARN instead of an OK; vault notes that still name an old engine folder are a WARN
+  ("vault notes").
+- Guard hardening for the vault inside the engine: Windows 8.3 short names (`VAULT~1`,
+  `HADES-~1`) are expanded before deletes, moves and Serena roots are judged; `<engine>/.vault` and
+  `<engine>/vault` stay protected when `hades.config.json` names a vault without `registry.json`
+  (the guard then uses the default vault that has one and warns on allowed calls); `git stage -f`,
+  `git update-index --add|--cacheinfo|--index-info` (`git.force`) and `git stash -a|--all`
+  (`git.discard`) are blocked; new rule `git.vault` blocks `add`/`stage`/`update-index`/`commit` of
+  vault paths from any repository other than the vault's own; `<engine>/.gitignore` is
+  self-protected; the vault's `registry.json` is CLI-only (`state.direct-edit`);
+  `<vault>/organizations` and `<vault>/company` cannot be deleted; Serena `activate_project` inside
+  the engine or a vault is refused except for a vault team folder or a registered project.
+
 ### Added
 - `hades export <target> [--dir <dir>] [--scope project|user] [--dry-run] [--force]` renders HADES for
   other coding agents: `codex`, `cursor`, `gemini`, `copilot`, `windsurf` (alias `devin`), `cline`,

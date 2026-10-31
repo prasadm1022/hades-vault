@@ -500,7 +500,8 @@ test('no private names in engine files (outside tests/fixtures)', () => {
   // Stored reversed so this file does not contain them.
   const names = ['sargsam', 'siri', 'amrahp', 'draob-eciton', 'erdac-vog', 'tol-niw', 'asarp'].map((s) => [...s].reverse().join(''));
   const re = new RegExp(`\\b(?:${names.join('|')})\\b`, 'i');
-  const SKIP_DIRS = new Set(['.git', 'node_modules', '.hades', '.tools-bin', 'vault', 'tests/fixtures']);
+  // Git-ignored local folders are not engine files: the vault (.vault, legacy vault) holds private data.
+  const SKIP_DIRS = new Set(['.git', 'node_modules', '.hades', '.tools-bin', '.vault', 'vault', '.idea', '.vscode', 'tests/fixtures']);
   const files = [];
   (function scan(dir) {
     for (const e of fs.readdirSync(path.join(ROOT, dir || '.'), { withFileTypes: true })) {
@@ -763,7 +764,7 @@ test('opensource:OSS-11: clone commands use the real repository URL', () => {
   for (const file of ['README.md', 'CONTRIBUTING.md', ...walk('docs', (f) => f.endsWith('.md'))]) {
     const text = read(file);
     assert.doesNotMatch(text, /github\.com\/<owner>/, `${file}: placeholder owner`);
-    for (const m of text.matchAll(/git clone [^\n]*?(https:\/\/\S+)/g)) assert.equal(m[1], 'https://github.com/prasadm1022/hades.git', `${file}: clone URL`);
+    for (const m of text.matchAll(/git clone [^\n]*?(https:\/\/\S+)/g)) assert.equal(m[1], 'https://github.com/prasadm1022/hades-vault.git', `${file}: clone URL`);
   }
 });
 
@@ -802,4 +803,20 @@ test('final polish: safety docs quote the real guard matcher and failure behavio
   }
   assert.match(read('docs/cli.md'), /they call `activate_project` with the absolute `<Project>` path before the first symbol tool/);
   assert.match(section(SKILL(), '**deploy** -', '**security**'), /still red after it -> stage `blocked`, not `failed`/);
+});
+
+test('naming: README explains hades-vault = HADES platform + private .vault; no sibling-vault guidance', () => {
+  const readme = read('README.md');
+  assert.match(readme, /\*\*hades-vault\*\*/);
+  assert.match(readme, /`\.vault\/` inside this folder/);
+  assert.match(readme, /git -C \.vault remote add origin <your-private-repository-url>/);
+  for (const file of ['README.md', 'CONTRIBUTING.md', 'HADES.md', ...walk('docs', (f) => f.endsWith('.md'))]) {
+    const text = read(file);
+    assert.doesNotMatch(text, /my-vault/, `${file}: old sibling vault guidance`);
+    assert.doesNotMatch(text, /prasadm1022\/hades(?!-vault)/, `${file}: old repository URL`);
+  }
+  const pkg = JSON.parse(read('package.json'));
+  assert.equal(pkg.name, 'hades-vault');
+  assert.deepEqual(pkg.bin, { hades: 'bin/hades.mjs' });
+  assert.match(read('.gitignore'), /^\/\.vault\/$/m);
 });

@@ -2,7 +2,10 @@
 
 Private company data for HADES: organizations, teams, knowledge, task records and security
 findings. Keep it private. HADES commits it locally and never pushes; if you back it up to a
-remote, make that remote private.
+remote, make that remote private. By default the vault is `<engine>/.vault`: the engine repository
+git-ignores it and it is its own git repository. To back it up, commit first, then add the remote:
+`git -C <vault> add -A && git -C <vault> commit -m "Initial vault"`, then
+`git -C <vault> remote add origin <private-url>` and `git -C <vault> push -u origin HEAD`.
 
 Engine: `{{ENGINE}}` (policies in `company/`, formats in `docs/file-formats.md`).
 

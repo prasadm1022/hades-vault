@@ -7,14 +7,17 @@ the JSON files below; agents change them through CLI commands (`docs/cli.md`), n
 
 ```json
 {
-  "vault": "C:/Users/me/git/my-vault",
+  "vault": ".vault",
   "workspace": "C:/Users/me/git",
   "aws": { "profile": "hades-deploy", "region": "eu-west-1", "read_only": false }
 }
 ```
 
 - Written by `hades init` (merged: other keys are kept). `HADES_VAULT` and `HADES_WORKSPACE`
-  override `vault` and `workspace`; defaults: `<engine>/vault`, the engine's parent folder.
+  override `vault` and `workspace`; defaults: `<engine>/.vault` (git-ignored, its own git
+  repository; a legacy `<engine>/vault` with a `registry.json` is used while `.vault` does not
+  exist), the engine's parent folder. A relative path is relative to the engine folder: `init`
+  stores a vault inside the engine as `".vault"`, so renaming the engine folder keeps it.
 - `aws` (optional, read by `hades mcp aws` and `hades doctor`): `profile` (string) or `profiles`
   (list); without either, `AWS_PROFILE`. `region` = where the AWS MCP server operates.
   `read_only: true` hides write-capable AWS MCP tools. `endpoint` (https) overrides the AWS MCP
@@ -32,11 +35,11 @@ the JSON files below; agents change them through CLI commands (`docs/cli.md`), n
       "settings_file": "C:/Users/me/.claude/settings.json",
       "workspace": null,
       "autonomy": "guarded",
-      "engine": "C:/Users/me/git/hades",
+      "engine": "C:/Users/me/git/hades-vault",
       "node": "C:/Program Files/nodejs/node.exe",
       "engine_version": "2.0.0",
-      "source": "C:/Users/me/git/hades",
-      "vault": "C:/Users/me/git/my-vault",
+      "source": "C:/Users/me/git/hades-vault",
+      "vault": "C:/Users/me/git/hades-vault/.vault",
       "installed_at": "2026-10-31T09:00:00Z",
       "files": [ { "path": "C:/Users/me/.claude/agents/hades/hades-tech-lead.md", "rel": "agents/hades/hades-tech-lead.md", "kind": "agent", "name": "hades-tech-lead", "sha256": "..." } ],
       "settings_added": { "hooks": [], "deny": [], "allow": [], "keys": [] }

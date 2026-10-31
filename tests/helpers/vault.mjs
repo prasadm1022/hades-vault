@@ -1,6 +1,8 @@
 // Temp vault factory shared by the CLI tests. Every vault lives under the OS temp folder and the
 // CLI runs with HADES_VAULT, HADES_WORKSPACE and HADES_CONFIG_FILE pointing there, so the engine's
-// real hades.config.json is never written (and its vault/workspace are never used).
+// real hades.config.json is never written (and its vault/workspace are never used). HADES_DEFAULT_VAULT
+// points the built-in default (<engine>/.vault) at a folder that does not exist, so a CLI run without
+// a configured vault never reaches a real vault inside the engine.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -33,6 +35,11 @@ export function cleanup() {
 }
 
 let defaultConfig = null;
+let noVault = null;
+function noDefaultVault() {
+  if (!noVault) noVault = `${tempDir('hades-novault-')}/no-default-vault`;
+  return noVault;
+}
 
 // Runs the CLI. Returns {code, out, err, lines, json()}.
 export function runCli(args, { env = {}, cwd, configFile } = {}) {
@@ -45,6 +52,7 @@ export function runCli(args, { env = {}, cwd, configFile } = {}) {
       HADES_DEBUG: '',
       HADES_VAULT: '',
       HADES_WORKSPACE: '',
+      HADES_DEFAULT_VAULT: noDefaultVault(),
       HADES_CONFIG_FILE: configFile || defaultConfig,
       ...env,
     },
@@ -68,7 +76,7 @@ export function runCliAsync(args, { env = {}, cwd, configFile } = {}) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [BIN, ...args], {
       cwd: cwd || ENGINE,
-      env: { ...process.env, HADES_DEBUG: '', HADES_VAULT: '', HADES_WORKSPACE: '', HADES_CONFIG_FILE: configFile || defaultConfig, ...env },
+      env: { ...process.env, HADES_DEBUG: '', HADES_VAULT: '', HADES_WORKSPACE: '', HADES_DEFAULT_VAULT: noDefaultVault(), HADES_CONFIG_FILE: configFile || defaultConfig, ...env },
       windowsHide: true,
     });
     let out = '';

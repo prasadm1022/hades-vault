@@ -49,13 +49,15 @@ export const DEFAULT_POLICY = {
   tempDirs: ['{ostmp}', '/tmp', '/var/tmp', '/private/tmp', '/private/var/folders'],
   protectedPaths: [
     '{home}', '{home}/.ssh', '{home}/.aws', '{home}/.gnupg', '{home}/.kube', '{home}/.config', '{home}/.claude', '{claude}',
-    '{workspace}', '{vault}', '{engine}', '{engine}/hooks', '{projects}', '{orgs}',
+    '{workspace}', '{vault}', '{vault}/organizations', '{vault}/company', '{engine}', '{engine}/hooks', '{projects}', '{orgs}',
     '/bin', '/boot', '/dev', '/etc', '/home', '/lib', '/lib64', '/opt', '/proc', '/root', '/sbin', '/srv',
     '/sys', '/usr', '/var', '/Applications', '/Library', '/System', '/Users', '/Volumes',
     'C:/Windows', 'C:/Program Files', 'C:/Program Files (x86)', 'C:/ProgramData', 'C:/Users',
   ],
   selfProtected: [
     '{engine}/hooks', '{engine}/hooks/**', '{engine}/hades.config.json', '{config}', '{policy}', '{home}/.claude.json',
+    // the engine's .gitignore keeps the vault (<engine>/.vault) out of the public engine repository
+    '{engine}/.gitignore',
     '{claude}/settings*.json', '{claude}/hooks/**', '{claude}/agents/hades', '{claude}/agents/hades/**', '{claude}/agents/hades-*',
     '{claude}/skills/hades*', '{claude}/skills/hades*/**', '{claude}/plugins/**', '{claude}/.claude.json',
     '{workspace}/.claude', '{workspace}/.claude/**', '{workspace}/CLAUDE.md', '{workspace}/AGENTS.md',
@@ -173,12 +175,16 @@ export const DEFAULT_POLICY = {
     { id: 'git.discard', re: '^(git|hub) (read-tree( .*)? (-u|--reset)|checkout-index( .*)? (-f|--force|-a|--all|-[a-zA-Z]*[fa][a-zA-Z]*))( |$)' },
     { id: 'git.discard', re: '^(git|hub) switch( .*)? (-f|--force|--discard-changes)( |$)' },
     { id: 'git.discard', re: '^(git|hub) stash (drop|clear)( |$)' },
+    // "stash --all" moves ignored files (the vault, hades.config.json, .tools-bin) out of the working tree
+    { id: 'git.discard', re: '^(git|hub) stash( (push|save)( .*)?| -.*)? (-a|--all|-[a-zA-Z]*a[a-zA-Z]*)( |$)' },
     { id: 'git.discard', re: '^(git|hub) rm(?!( .*)? --cached( |$))( .*)? (\\.|\\./|\\*|:/)( |$)' },
     { id: 'git.discard', re: '^(git|hub) worktree remove( .*)? (-f|--force)( |$)' },
     { id: 'git.discard', re: '^(git|hub) (reflog (expire|delete)|prune|gc( .*)? --prune(=\\S+)?)( |$)' },
     { id: 'git.force', re: '^(git|hub) branch( .*)? (-[a-zA-Z]*[DMCf][a-zA-Z]*|--force)( |$)' },
     { id: 'git.force', re: '^(git|hub) (switch( .*)? -C|checkout( .*)? -B)( |$)' },
-    { id: 'git.force', re: '^(git|hub) (add|tag)( .*)? (-[a-zA-Z]*f[a-zA-Z]*|--force)( |$)' },
+    { id: 'git.force', re: '^(git|hub) (add|stage|tag)( .*)? (-[a-zA-Z]*f[a-zA-Z]*|--force)( |$)' },
+    // low-level staging ignores .gitignore (a git-ignored vault inside the engine would be staged)
+    { id: 'git.force', re: '^(git|hub) update-index( .*)? (--add|--cacheinfo|--index-info)( |=|$)' },
     { id: 'git.config', re: '^(git|hub) config( .*)? (--global|--system)( |$)', unless: '( --get[a-z-]*| --list| -l| --show-origin| --show-scope)( |$)|^(git|hub) config (--global|--system)( --[a-z-]+)* [^ -]\\S*$' },
     // aliases, includes and hook paths (section names are case-insensitive); interactive config edits
     { id: 'git.config', re: '^(git|hub) config( .*)? (alias|include|includeif)\\.|^(git|hub) config( .*)? core\\.hookspath( |=|$)|^(git|hub) config( .*)? (-e|--edit)( |$)', flags: 'i', unless: '( --get[a-z-]*| --list| -l)( |$)' },
@@ -286,7 +292,8 @@ const MESSAGES = {
   'git.push': ['pushing is reserved for the owner', 'Commit locally; the owner reviews and pushes.'],
   'git.rewrite': ['history rewriting (rebase, amend, filter, reset to a commit, ref edits) is not allowed', 'Create a new commit instead.'],
   'git.discard': ['mass discard of work or recovery data is not allowed', 'Restore or remove specific paths, or keep the changes and commit them.'],
-  'git.force': ['forced git operation', 'Use the non-forced form (e.g. git branch -d, git add without -f).'],
+  'git.force': ['forced git operation (or low-level staging that bypasses .gitignore)', 'Use the non-forced form (e.g. git branch -d, git add without -f).'],
+  'git.vault': ['staging vault files (%s) into a repository other than the vault\'s own would put private data there', 'Commit vault changes with git -C <vault> only.'],
   'git.config': ['changing git aliases or global/system git config', 'Use repository-local settings; record global needs as a decision.'],
   'git.dynamic': ['git subcommand that is computed at run time, fed by xargs, or not a git builtin (aliases are not allowed) cannot be verified', 'Write the git builtin command literally.'],
   'git.hosting': ['remote repository changes (PRs, issues, releases, repos, gists, API writes) are owner actions', 'Record what is needed in the task README for the owner.'],
@@ -317,7 +324,7 @@ const MESSAGES = {
   'scope.write': ['%s', 'Write only inside: %s.'],
   'scope.vendored': ['vendored tool sources are read-only (%s)', 'Use hades tools commands; record needed upstream changes as a decision.'],
   'scope.engine': ['HADES engine files are not a registered project (%s)', 'Write inside a registered project or the vault.'],
-  'state.direct-edit': ['%s is written by the HADES CLI only', 'Use hades task|defect|gate commands.'],
+  'state.direct-edit': ['%s is written by the HADES CLI only', 'Use hades task|defect|gate|team|org commands.'],
   'guard.limit': ['command too large or complex to verify', 'Split it into smaller commands, or write a script file and run it.'],
 };
 
@@ -342,7 +349,7 @@ stage stash status stripspace submodule submodule--helper subtree svn switch sym
 update update-index update-ref update-server-info upload-archive upload-archive--writer upload-pack var verify-commit
 verify-pack verify-tag version web--browse whatchanged worktree write-tree lfs flow filter-repo`.split(/\s+/));
 // Long options the git rules match on, so abbreviations (git accepts any unique prefix) are expanded.
-const GIT_LONG = ['--hard', '--merge', '--soft', '--keep', '--mixed', '--amend', '--rebase', '--force', '--dry-run', '--discard-changes', '--staged', '--worktree', '--cached', '--prune', '--global', '--system', '--edit', '--reset', '--all'];
+const GIT_LONG = ['--hard', '--merge', '--soft', '--keep', '--mixed', '--amend', '--rebase', '--force', '--dry-run', '--discard-changes', '--staged', '--worktree', '--cached', '--prune', '--global', '--system', '--edit', '--reset', '--all', '--add', '--cacheinfo', '--index-info'];
 function gitLong(a) {
   const m = /^(--[a-z][a-z-]*)(=[\s\S]*)?$/.exec(a);
   if (!m || GIT_LONG.includes(m[1])) return a;
@@ -604,6 +611,16 @@ function realOf(p) {
   return null;
 }
 
+// Windows 8.3 short names (VAULT~1 for .vault, HADES-~1 for hades-vault) name the same folders as
+// the long names: such a path is expanded through the filesystem before it is judged.
+const SHORT_SEG = /(^|\/)[^/]*~\d[^/]*(\/|$)/;
+function longName(p) {
+  if (!WIN || !p || isUnc(p) || !SHORT_SEG.test(p)) return p;
+  return realOf(p) || p;
+}
+// A wildcard in a segment that looks like a short name (VAULT~?, HADES-~*) cannot be expanded safely.
+const shortGlob = (p) => WIN && String(p).split('/').some((seg) => /~[\d*?[]/.test(seg) && hasGlob(seg));
+
 // Glob -> RegExp over lower-cased normalised paths. Backslash escapes a character.
 function globRe(glob, anchored = true) {
   let re = '';
@@ -771,6 +788,14 @@ const MANDATORY_GENERIC = [
 // variable) and for MCP tools whose root the guard cannot see.
 const PROTECTED_BASENAME = /^(settings(\.[^/]*)?\.json|\.mcp\.json|\.claude\.json|managed-settings(\.[^/]*)?\.json|managed-mcp\.json|guard\.mjs|guard-policy\.json|hades\.config\.json)$/i;
 
+function defaultVault(env) {
+  if (env.HADES_DEFAULT_VAULT) return path.resolve(env.HADES_DEFAULT_VAULT);
+  const current = path.join(ENGINE_DIR, '.vault');
+  const legacy = path.join(ENGINE_DIR, 'vault');
+  if (!fs.existsSync(current) && fs.existsSync(path.join(legacy, 'registry.json'))) return legacy;
+  return current;
+}
+
 function makeContext(input, env) {
   const policyFile = slash(path.resolve(env.HADES_GUARD_POLICY || path.join(ENGINE_DIR, 'hooks', 'guard-policy.json')));
   const loaded = readJson(policyFile);
@@ -786,8 +811,30 @@ function makeContext(input, env) {
   const X = { policy, env, agent: String(input.agent_type || ''), cwd, engine, home, configFile, policyFile, claudeDir };
   X.deadline = Date.now() + BUDGET_MS;
   X.config = memo(() => readJson(configFile) || {});
-  X.vault = memo(() => slash(path.resolve(env.HADES_VAULT || X.config().vault || path.join(ENGINE_DIR, 'vault'))));
-  X.workspace = memo(() => slash(path.resolve(env.HADES_WORKSPACE || X.config().workspace || path.dirname(ENGINE_DIR))));
+  // Same resolution as lib/core/config.mjs: env, then hades.config.json (relative to the engine),
+  // then <engine>/.vault (a legacy <engine>/vault with a registry.json while .vault does not exist).
+  // A relative HADES_VAULT / HADES_WORKSPACE is relative to the engine as well (the hook's cwd varies).
+  const fromConfig = (v) => (typeof v === 'string' && v ? path.resolve(ENGINE_DIR, v) : null);
+  X.vaultConfigured = memo(() => slash(path.resolve(fromConfig(env.HADES_VAULT) || fromConfig(X.config().vault) || defaultVault(env))));
+  // Where a vault sits by default: <engine>/.vault and the legacy <engine>/vault (or HADES_DEFAULT_VAULT).
+  X.vaultCandidates = memo(() => (env.HADES_DEFAULT_VAULT ? [slash(path.resolve(env.HADES_DEFAULT_VAULT))] : [`${engine}/.vault`, `${engine}/vault`]));
+  // A configured vault without registry.json (a stale absolute path after the engine folder was
+  // renamed, a moved vault) falls back to a default location that holds one, so the real vault keeps
+  // its protection and the roles keep their scope. An explicit HADES_VAULT is used as given.
+  X.vault = memo(() => {
+    const v = X.vaultConfigured();
+    if (env.HADES_VAULT || fs.existsSync(`${v}/registry.json`)) return v;
+    return X.vaultCandidates().find((d) => fs.existsSync(`${d}/registry.json`)) || v;
+  });
+  // Every folder protected as a vault whatever the config says: the vault, the configured one, the defaults.
+  X.vaultRoots = memo(() => {
+    const out = [];
+    for (const v of [X.vault(), X.vaultConfigured(), ...X.vaultCandidates()]) if (v && !out.some((o) => K(o) === K(v))) out.push(v);
+    return out;
+  });
+  X.inVault = (p) => X.vaultRoots().some((v) => isInside(p, v));
+  X.isRegistry = (p) => X.vaultRoots().some((v) => K(p) === K(`${v}/registry.json`));
+  X.workspace = memo(() => slash(path.resolve(fromConfig(env.HADES_WORKSPACE) || fromConfig(X.config().workspace) || path.dirname(ENGINE_DIR))));
   X.registry = memo(() => readJson(`${X.vault()}/registry.json`) || {});
   X.projects = memo(() => Object.values(X.registry().teams || {}).map((t) => t && t.project_path).filter(Boolean).map((p) => np(p, null)).filter(Boolean));
   X.orgs = memo(() => Object.values(X.registry().organizations || {}).map((o) => o && o.root_path).filter(Boolean).map((p) => np(p, null)).filter(Boolean));
@@ -819,7 +866,11 @@ function makeContext(input, env) {
   X.pathList = (patterns) => patterns.flatMap((p) => X.expand(String(p))).map((p) => np(p.replace(/\\(.)/g, '$1'), null)).filter(Boolean);
   X.globList = (patterns) => patterns.flatMap((p) => X.expand(String(p))).map((p) => safeGlobRe(p)).filter(Boolean);
   X.temp = memo(() => X.pathList(policy.tempDirs.filter((p) => p !== '{temp}')));
-  X.protected = memo(() => X.pathList(policy.protectedPaths));
+  X.protected = memo(() => {
+    const out = X.pathList(policy.protectedPaths);
+    for (const v of X.vaultRoots()) if (!out.some((q) => K(q) === K(v))) out.push(v);
+    return out;
+  });
   // Roots, system dirs and home only: used for remote (ssh) commands and filtered find -delete.
   X.protectedCore = memo(() => X.pathList(policy.protectedPaths.filter((p) => !/\{(workspace|vault|engine|projects|orgs)\}/.test(p))));
   X.selfCoreRes = memo(() => X.globList(MANDATORY_CORE));
@@ -902,7 +953,7 @@ function secretHit(p, X) {
   if (S.paths.some((r) => r.test(k))) return true;
   const base = k.slice(k.lastIndexOf('/') + 1);
   const dot = base.lastIndexOf('.');
-  if (dot > 0 && S.notesExt.test(base.slice(dot + 1)) && S.notesStem.test(base.slice(0, dot)) && !isInside(k, X.engine)) return true;
+  if (dot > 0 && S.notesExt.test(base.slice(dot + 1)) && S.notesStem.test(base.slice(0, dot)) && !(isInside(k, X.engine) && !isInside(k, X.vault()))) return true;
   return false;
 }
 
@@ -2483,6 +2534,41 @@ function checkGit(c) {
   return null;
 }
 
+// Vault files staged or committed by a repository that is not the vault's own (the engine repository
+// when the vault is <engine>/.vault): "git add .vault/registry.json", "git -c core.excludesFile=x add
+// .vault", "git commit -- .vault/x". Inside the vault (git -C <vault> add ...) is the vault's own repo.
+const GIT_STAGING = new Set(['add', 'stage', 'update-index', 'commit']);
+function checkGitVault(c, X) {
+  if ((c.exe !== 'git' && c.exe !== 'hub') || !GIT_STAGING.has(c.gitSub || '')) return null;
+  const repo = c.cwd ? longName(c.cwd) : null;
+  const work = (c.gitGlobals || []).find(([k]) => k === '--work-tree' || k === '--git-dir');
+  const args = c.args.slice(1);
+  const valueOpt = /^(-m|-F|-C|-c|-t|--message|--file|--author|--date|--template|--reuse-message|--reedit-message|--fixup|--squash|--cleanup|--trailer|--pathspec-from-file|--chmod)$/;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (valueOpt.test(a)) {
+      i++;
+      continue;
+    }
+    if (!a || (a.startsWith('-') && a !== '-')) continue;
+    // pathspec magic: ":(top)x", ":/x", ":!x" (exclusions add nothing)
+    let s = a;
+    const magic = /^:(\([^)]*\)|[/!^]*)/.exec(s);
+    if (magic && /[!^]/.test(magic[1])) continue;
+    let base = repo;
+    if (magic) {
+      s = s.slice(magic[0].length);
+      if (/top|\//.test(magic[1])) base = null; // relative to the top of the repository: judge by name below
+    }
+    const p = base ? np(s, base) : null;
+    const lp = p ? longName(p) : null;
+    const hit = lp ? X.vaultRoots().find((v) => isInside(lp, v)) : null;
+    if (hit && (work || !repo || !isInside(repo, hit))) return new Block('git.vault', a);
+    if (!p && /(^|\/)\.?vault(\/|$)/i.test(slash(s)) && repo && !X.inVault(repo) && isInside(repo, X.engine)) return new Block('git.vault', a);
+  }
+  return null;
+}
+
 function checkSession(c, X, st) {
   const sessionVar = (a) => SESSION_ENV.test((/^([A-Za-z_]\w*)\+?=/.exec(a) || [])[1] || '');
   const launches = c.exe === 'claude' || (c.exe === 'hades' && c.args[0] === 'run');
@@ -2595,7 +2681,14 @@ function projectOwned(p, X) {
 }
 
 // Literal (glob-free) checks of one normalised path.
-function hitAt(p, kind, c, X) {
+function hitAt(p, kind, c, X, long = true) {
+  if (long && !c.remote) {
+    const L = longName(p);
+    if (L !== p) {
+      const h = hitAt(L, kind, c, X, false);
+      if (h) return h;
+    }
+  }
   let base = p;
   while (/\/(\*|\.\*|\*\.\*|\*\*)$/.test(base)) base = base.replace(/\/(\*|\.\*|\*\.\*|\*\*)$/, '') || '/';
   if (/^[a-z]:$/i.test(base)) base += '/';
@@ -2642,6 +2735,7 @@ function protectedHit(target, kind, c, X, st, depth = 0) {
   if (lit) return lit;
   const kp = K(p);
   if (hasGlob(kp)) {
+    if (!remote && shortGlob(p)) return `unverifiable short-name glob ${t}`;
     // the pattern against every protected path and its ancestors
     let base = kp;
     while (/\/(\*|\.\*|\*\.\*|\*\*)$/.test(base)) base = base.replace(/\/(\*|\.\*|\*\.\*|\*\*)$/, '') || '/';
@@ -2889,7 +2983,7 @@ function checkWriteTarget(s, del, c, X, o) {
     for (const k of ks) {
       if (X.selfCoreRes().some((r) => r.test(k))) return new Block('self.protect', s);
       if (X.selfRes().some((r) => r.test(k)) && !o.exempt(k, del)) return new Block('self.protect', s);
-      if (X.stateShell().test(k)) return new Block('state.direct-edit', s);
+      if (X.stateShell().test(k) || X.isRegistry(k)) return new Block('state.direct-edit', s);
       if (!del && X.gitConfigRes().some((r) => r.test(k))) return new Block('git.config', s);
       if (!del && !o.isGit && c.exe !== 'find' && gitInternal(k)) return new Block('git.internals', s);
       // creating or replacing a .claude folder (cp/mv of a prepared folder) outside the legacy copies
@@ -3200,7 +3294,7 @@ function checkState(st) {
     for (const r of X.rawRules()) if (r.rx.test(text)) return new Block(r.id, '');
   }
   for (const c of st.cmds) {
-    const b = checkRules(c, X, st) || checkGit(c) || checkSession(c, X, st) || checkDelete(c, X, st) || checkWriteProtected(c, X, st) || checkSecrets(c, X, st) || checkPaste(c, X) || checkRce(c, st);
+    const b = checkRules(c, X, st) || checkGit(c) || checkGitVault(c, X) || checkSession(c, X, st) || checkDelete(c, X, st) || checkWriteProtected(c, X, st) || checkSecrets(c, X, st) || checkPaste(c, X) || checkRce(c, st);
     if (b) return b;
     if (Date.now() > X.deadline) return new Block('guard.limit', 'time budget exceeded');
   }
@@ -3254,7 +3348,7 @@ function checkFileTool(tool, ti, X) {
   if (kforms.some((k) => X.neverRes().some((r) => r.test(k)))) return new Block('scope.vendored', raw);
   if (kforms.some((k) => k.split('/').includes('.git'))) return new Block('git.internals', raw);
   if (forms.some((f) => secretHit(f, X))) return new Block('secrets.file', raw);
-  if (forms.some((f) => isInside(f, X.vault()) && X.stateTools().test(K(f)))) return new Block('state.direct-edit', raw);
+  if (forms.some((f) => (X.inVault(f) && X.stateTools().test(K(f))) || X.isRegistry(f))) return new Block('state.direct-edit', raw);
   if (X.agent.startsWith('hades-')) {
     const roles = X.policy.roles || {};
     const scope = Object.prototype.hasOwnProperty.call(roles, X.agent) ? roles[X.agent] : roles.default || [];
@@ -3336,10 +3430,14 @@ function checkSerena(name, ti, X) {
     return checkState(st);
   }
   if (name === 'activate_project') {
-    const p = typeof ti.project === 'string' && /[\\/]/.test(ti.project) ? np(ti.project, X.cwd) : null;
+    const p = typeof ti.project === 'string' && /[\\/]/.test(ti.project) ? longName(np(ti.project, X.cwd)) : null;
     if (!p) return null;
-    const bad = [X.engine, X.vault(), X.home, X.claudeDir, X.workspace()].find((d) => K(d) === K(p) || isInside(d, p));
-    if (bad && !X.projects().some((pr) => K(pr) === K(p))) return new Block('scope.write', `Serena may not be rooted at ${ti.project} (contains ${bad})${SEP}a registered project path`);
+    if (X.projects().some((pr) => K(pr) === K(p))) return null;
+    const bad = [X.engine, ...X.vaultRoots(), X.home, X.claudeDir, X.workspace()].find((d) => K(d) === K(p) || isInside(d, p));
+    if (bad) return new Block('scope.write', `Serena may not be rooted at ${ti.project} (contains ${bad})${SEP}a registered project path`);
+    // inside the engine or a vault: only a vault team folder (<vault>/**/teams/<team>)
+    const teamRoot = X.vaultRoots().some((v) => isInside(p, v) && /\/teams\/[^/]+(\/|$)/.test(K(p).slice(K(v).length)));
+    if ((isInside(p, X.engine) || X.inVault(p)) && !teamRoot) return new Block('scope.write', `Serena may not be rooted at ${ti.project} (inside the HADES engine or vault)${SEP}a registered project path`);
     return null;
   }
   if (SERENA_READ.test(name)) {
@@ -3374,7 +3472,8 @@ function checkSerena(name, ti, X) {
     if (fb) return fb;
     if (name === 'replace_in_files' || name.startsWith('jet_brains_')) {
       // a directory: everything below it may change
-      const big = [X.engine, X.vault(), X.home, X.claudeDir, X.workspace()].find((d) => K(d) === K(p) || isInside(d, p));
+      const lp = longName(p);
+      const big = [X.engine, ...X.vaultRoots(), X.home, X.claudeDir, X.workspace()].find((d) => K(d) === K(lp) || isInside(d, lp));
       if (big && !X.projects().some((pr) => K(pr) === K(p) || isInside(p, pr))) return new Block('scope.write', `${name} over ${rel || '(project root)'} reaches ${big}${SEP}one registered project folder`);
       const hit = protectedBelow(p, X).find((f) => {
         const r = slash(path.posix.relative(K(X.cwd), K(f)));
@@ -3645,6 +3744,20 @@ function logBlock(res, input, format = 'claude') {
   }
 }
 
+// A configured vault without registry.json (stale hades.config.json after a rename or a move): the
+// guard keeps protecting the default locations, and says so on allowed calls.
+export function vaultWarning(env = process.env) {
+  try {
+    const X = makeContext({ cwd: ENGINE_DIR }, env);
+    const v = X.vaultConfigured();
+    if (fs.existsSync(`${v}/registry.json`)) return '';
+    const used = X.vault();
+    return `HADES guard: warning: the configured vault ${v} has no registry.json${K(used) !== K(v) ? `; using ${used}` : ''}. Run "hades doctor".\n`;
+  } catch {
+    return '';
+  }
+}
+
 export function policyFileText() {
   const comment = 'HADES guard policy, merged over the built-in defaults in guard.mjs: objects merge, arrays and scalars replace. Placeholders: {home} {engine} {vault} {workspace} {config} {projects} {orgs} {ostmp} (OS temp dirs) {temp} (tempDirs) {claude} (CLAUDE_CONFIG_DIR or ~/.claude) {policy} (this file). The guard\'s own files, this policy file, the HADES config and the Claude settings/agents/skills/hooks stay protected whatever this file says. Rule ids: hooks/README.md. Regenerate the shipped copy with: node hooks/guard.mjs --print-policy > hooks/guard-policy.json';
   return `${JSON.stringify({ $comment: comment, ...DEFAULT_POLICY }, null, 2)}\n`;
@@ -3695,7 +3808,7 @@ function main() {
         return;
       }
     }
-    respond(null);
+    respond(null, vaultWarning());
   } catch (err) {
     // Fail closed when the call could touch something the guard protects (high-risk keyword in the
     // command or path); fail open otherwise so a guard bug cannot brick ordinary work.

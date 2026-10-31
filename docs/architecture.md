@@ -23,18 +23,28 @@ Design goals, in priority order:
 
 | Repository | Visibility | Contents |
 |---|---|---|
-| **engine** (`hades/`, this repo) | open source (MIT) | agents, skills, company policies, playbooks, CLI, hooks, templates, vendored tools (submodules), docs |
-| **vault** (e.g. `my-vault/`) | private | the owner's company data: `registry.json`, organizations, teams, knowledge, learned playbooks, task records |
+| **engine**: HADES (`hades-vault/`, this repo) | open source (MIT) | agents, skills, company policies, playbooks, CLI, hooks, templates, vendored tools (submodules), docs |
+| **vault** (default `hades-vault/.vault/`) | private, git-ignored by the engine, its own git repository | the owner's company data: `registry.json`, organizations, teams, knowledge, learned playbooks, task records |
 
-The engine never contains client data. The vault never contains engine code. `hades.config.json`
-(git-ignored, written by `hades init`) connects them:
+The repository and company name `hades-vault` stands for both parts: HADES, the shareable agentic
+platform, and the vault, the owner's private local knowledge base. By default the vault lives inside
+the engine folder at `.vault/`, which the engine repository git-ignores (`hades doctor` FAILs if a
+vault inside the engine is not ignored) and which `hades init` turns into its own git repository.
+The engine repository never contains client data. The vault never contains engine code.
+`hades.config.json` (git-ignored, written by `hades init`) connects them:
 
 ```json
-{ "vault": "C:/Users/me/git/my-vault", "workspace": "C:/Users/me/git", "aws": { "profile": "hades-deploy", "region": "eu-west-1" } }
+{ "vault": ".vault", "workspace": "C:/Users/me/git", "aws": { "profile": "hades-deploy", "region": "eu-west-1" } }
 ```
 
-`HADES_VAULT` and `HADES_WORKSPACE` override the file. Without either, the vault defaults to
-`<engine>/vault/` (git-ignored). Schema: `file-formats.md`.
+A relative path is relative to the engine folder. `HADES_VAULT` and `HADES_WORKSPACE` override the
+file. Without either, the vault defaults to `<engine>/.vault/` (a legacy `<engine>/vault/` with a
+`registry.json` is still used while `.vault/` does not exist). A vault anywhere else (`hades init
+--vault <path>`) works the same. Schema: `file-formats.md`.
+
+The guard treats a vault inside the engine as the vault, not as engine code: role agents write
+their task folders, knowledge and notes there, while the rest of the engine stays out of their
+write scope (`scope.engine`) and the guard's own files stay self-protected.
 
 ## 2. Organisation chart
 

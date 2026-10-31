@@ -7,8 +7,10 @@ node_modules/
 !tests/fixtures/**/*.log
 
 # A vault holds private client data. Keep yours in its own private repository;
-# the default in-repo location (<engine>/vault) is ignored so it can never be published by mistake.
+# the default in-repo location (<engine>/.vault; the legacy <engine>/vault before the .vault default,
+# see CHANGELOG "Unreleased") is ignored so it can never be published by mistake.
 # Anchored: templates/vault/ is the scaffold "hades init" copies and must be committed.
+/.vault/
 /vault/
 /hades.config.json
 

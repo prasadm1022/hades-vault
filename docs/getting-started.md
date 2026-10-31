@@ -10,22 +10,34 @@ DAST scans), AWS CLI v2 (AWS deploys). A folder that holds your projects (the **
 ## 2. Clone the engine
 
 ```sh
-git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades.git
-cd hades
+git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades-vault.git
+cd hades-vault
 npm test            # optional: the CLI test suite (no network needed)
 ```
 
 ## 3. Create the vault
 
 The vault is a private git repository holding your registry, teams, knowledge and task records.
-Keep it outside the engine and never publish it.
+By default it lives inside the engine folder at `.vault/`, which the engine repository git-ignores:
+it is its own repository and is never published with the engine.
 
 ```sh
-hades init --vault ../my-vault --workspace ..
+hades init                        # vault: <engine>/.vault, workspace: the engine's parent folder
 ```
 
 This writes `hades.config.json` (git-ignored), scaffolds the vault from `templates/vault/` and runs
-`git init` in it (nothing is committed). Add a **private** remote to the vault if you want a backup.
+`git init` in it (nothing is committed). For a backup, add a **private** remote (never a public one)
+after the first vault commit (a push of a vault without commits fails). The first command must print
+the `.vault` folder itself, not the engine folder:
+
+```sh
+git -C <engine>/.vault rev-parse --show-toplevel
+git -C <engine>/.vault add -A && git -C <engine>/.vault commit -m "Initial vault"
+git -C <engine>/.vault remote add origin <your-private-repository-url>
+git -C <engine>/.vault push -u origin HEAD
+```
+
+A custom location still works: `hades init --vault <path> --workspace <path>`.
 
 ## 4. Tools, install, doctor
 
@@ -143,7 +155,7 @@ git -C <repo> log --oneline -5
 git -C <repo> show --stat <hash>
 git -C <repo> diff <hash>~1 <hash>      # read the change
 git -C <repo> push                      # yours to run; with feature-branch: push -u origin hades/<task-id>-<slug>
-git -C ../my-vault push                 # private vault remote, if any
+git -C <engine>/.vault push             # private vault remote, if any
 ```
 
 Do not push commits the report marks do-not-push (an unresolved security defect).

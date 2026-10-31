@@ -19,6 +19,8 @@
     "{claude}",
     "{workspace}",
     "{vault}",
+    "{vault}/organizations",
+    "{vault}/company",
     "{engine}",
     "{engine}/hooks",
     "{projects}",
@@ -56,6 +58,7 @@
     "{config}",
     "{policy}",
     "{home}/.claude.json",
+    "{engine}/.gitignore",
     "{claude}/settings*.json",
     "{claude}/hooks/**",
     "{claude}/agents/hades",
@@ -453,6 +456,10 @@
     },
     {
       "id": "git.discard",
+      "re": "^(git|hub) stash( (push|save)( .*)?| -.*)? (-a|--all|-[a-zA-Z]*a[a-zA-Z]*)( |$)"
+    },
+    {
+      "id": "git.discard",
       "re": "^(git|hub) rm(?!( .*)? --cached( |$))( .*)? (\\.|\\./|\\*|:/)( |$)"
     },
     {
@@ -473,7 +480,11 @@
     },
     {
       "id": "git.force",
-      "re": "^(git|hub) (add|tag)( .*)? (-[a-zA-Z]*f[a-zA-Z]*|--force)( |$)"
+      "re": "^(git|hub) (add|stage|tag)( .*)? (-[a-zA-Z]*f[a-zA-Z]*|--force)( |$)"
+    },
+    {
+      "id": "git.force",
+      "re": "^(git|hub) update-index( .*)? (--add|--cacheinfo|--index-info)( |=|$)"
     },
     {
       "id": "git.config",

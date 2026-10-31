@@ -1,5 +1,5 @@
 {
-  "name": "hades-company",
+  "name": "hades-vault",
   "version": "2.0.0",
   "description": "HADES - an autonomous software company for Claude Code: business analysis, architecture, planning, build, QA, deploy and security testing by role agents, with token-efficient handoffs and deterministic safety guards.",
   "type": "module",
@@ -8,11 +8,11 @@
   "author": "Prasad Madusanka",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prasadm1022/hades.git"
+    "url": "git+https://github.com/prasadm1022/hades-vault.git"
   },
-  "homepage": "https://github.com/prasadm1022/hades#readme",
+  "homepage": "https://github.com/prasadm1022/hades-vault#readme",
   "bugs": {
-    "url": "https://github.com/prasadm1022/hades/issues"
+    "url": "https://github.com/prasadm1022/hades-vault/issues"
   },
   "bin": {
     "hades": "bin/hades.mjs"

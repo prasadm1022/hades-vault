@@ -67,7 +67,11 @@ one-line reason. Summary (full table: [`hooks/README.md`](../hooks/README.md)):
 
 The CLI calls the same checker (`checkShell`) on the shell values of `team.json`: when they are set
 (`hades team set`) and before `hades gate` runs a project command. The hook cannot see commands the
-CLI runs itself, and `team.json` lives in the agent-writable vault.
+CLI runs itself, and `team.json` lives in the agent-writable vault. The default vault is
+`<engine>/.vault`: inside the engine folder but git-ignored by the engine repository and its own git
+repository, so the platform can be shared without the data. The guard treats it as the vault (role
+agents may write it; state files and mass deletes stay blocked), never as an exemption for engine
+files; `hades doctor` FAILs when a vault inside the engine is not git-ignored.
 
 ## 3. Deny rules
 

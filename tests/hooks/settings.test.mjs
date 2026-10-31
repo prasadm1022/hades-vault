@@ -56,11 +56,11 @@ test('allow rules: safe CLI subcommands and git -C forms only; never run, instal
 });
 
 test('engine paths with spaces are quoted in the CLI line and the allow rules', () => {
-  const eng = 'C:/Users/Jane Doe/git/hades';
-  assert.equal(set.hadesCli(eng), 'node "C:/Users/Jane Doe/git/hades/bin/hades.mjs"');
+  const eng = 'C:/Users/Jane Doe/git/hades-vault';
+  assert.equal(set.hadesCli(eng), 'node "C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs"');
   assert.equal(set.hadesCli('/opt/hades'), 'node /opt/hades/bin/hades.mjs');
   const rules = set.allowRules(eng);
-  assert.ok(rules.includes('Bash(node "C:/Users/Jane Doe/git/hades/bin/hades.mjs" task *)'), rules.join('\n'));
+  assert.ok(rules.includes('Bash(node "C:/Users/Jane Doe/git/hades-vault/bin/hades.mjs" task *)'), rules.join('\n'));
   assert.ok(set.desiredSettings(eng).allow.every((r) => !/hades\.mjs" \*\)/.test(r)));
 });
 

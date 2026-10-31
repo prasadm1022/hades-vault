@@ -117,7 +117,7 @@ the agent's home folder and applies to every folder you open.
 
 Every platform needs the common setup first: Node.js 22+ and git, `hades init`, `hades tools setup`
 (Serena, Playwright MCP, REA, scanners), `hades doctor`. In the commands below, `<workspace>` and
-`<vault>` are the paths from `hades.config.json`, `<engine>` is this repository, and `portal` is an
+`<vault>` are the paths from `hades.config.json` (by default `<vault>` is `<engine>/.vault`), `<engine>` is this repository (cloned as `hades-vault`), and `portal` is an
 onboarded team. `node bin/hades.mjs ...` runs from the engine folder. Lines joined with `&&` work in
 sh, bash and PowerShell 7; in Windows PowerShell 5.1 run the parts one after another. The agents'
 own commands follow each vendor's documentation and were not run against the platforms.

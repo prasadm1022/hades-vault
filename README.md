@@ -10,6 +10,17 @@ you review the local commits and push them yourself. It can also be exported to 
 agents (Codex, Cursor, Gemini CLI, GitHub Copilot, Devin, Cline, OpenCode, any `AGENTS.md` tool),
 with the gaps listed below.
 
+**The name.** This repository is **hades-vault**: two parts that live in one folder.
+
+- **HADES** (the `hades` CLI, the `hades-<role>` agents, the `/hades` skills, the guard hook,
+  policies, playbooks and templates) is the agentic system: the shareable, open-source platform in
+  this repository.
+- **The vault** is your private, local knowledge base: registry, organizations, teams, knowledge and
+  task records. Its default location is `.vault/` inside this folder. It is **git-ignored** by this
+  repository and has **its own git repository**, so your data is never committed with (or published
+  as part of) the platform. Back it up to a **private** remote of your own. A vault elsewhere
+  (`hades init --vault <path>`) still works.
+
 Status: version 2.0.0 (unreleased changes in [CHANGELOG.md](CHANGELOG.md)) · License: MIT ·
 Node.js 22 or newer · Windows, macOS, Linux.
 
@@ -50,10 +61,11 @@ with no work in a task is never spawned. Two repositories work together:
 
 | Repository | Visibility | Contents |
 |---|---|---|
-| engine (this repository) | public, MIT | agents, skills, policies, playbooks, CLI, guard hook, templates, vendored tools |
-| vault (yours) | **private** | registry, organizations, teams, knowledge, task records |
+| engine: HADES (this repository, `hades-vault`) | public, MIT | agents, skills, policies, playbooks, CLI, guard hook, templates, vendored tools |
+| vault (yours, `<engine>/.vault` by default) | **private**, git-ignored by the engine, its own repository | registry, organizations, teams, knowledge, task records |
 
-Your code stays in your project repositories. The engine never holds client data.
+Your code stays in your project repositories. The engine repository never holds client data: the
+vault folder inside it is git-ignored (`hades doctor` fails if it is not).
 
 ### The pipeline
 
@@ -121,9 +133,9 @@ For Claude Code on macOS or Linux, with `~/code` as the workspace that holds you
 
 ```bash
 mkdir -p ~/code && cd ~/code
-git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades.git
-cd hades
-node bin/hades.mjs init --vault ../my-vault --workspace ..
+git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades-vault.git
+cd hades-vault
+node bin/hades.mjs init                  # vault: ~/code/hades-vault/.vault, workspace: ~/code
 node bin/hades.mjs tools setup
 node bin/hades.mjs install
 node bin/hades.mjs doctor
@@ -160,23 +172,25 @@ For another coding agent, run `node bin/hades.mjs export <target>` instead of `i
 
 ## Installation
 
-The examples use a workspace folder that holds the engine, the vault and your projects: `~/code`
-on macOS/Linux, `C:\code` on Windows. Every `node bin/hades.mjs ...` line runs from the engine folder.
+The examples use a workspace folder that holds the engine and your projects: `~/code` on
+macOS/Linux, `C:\code` on Windows. The engine is cloned to `~/code/hades-vault` (`C:\code\hades-vault`)
+and the vault lives inside it at `.vault/`. Every `node bin/hades.mjs ...` line runs from the engine
+folder.
 
 ### 1. Clone the engine with its submodules
 
 ```bash
 mkdir -p ~/code && cd ~/code
-git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades.git
-cd hades
+git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades-vault.git
+cd hades-vault
 ```
 
 ```powershell
 git config --global core.longpaths true
 New-Item -ItemType Directory -Force C:\code | Out-Null
 Set-Location C:\code
-git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades.git
-Set-Location hades
+git clone --recurse-submodules --shallow-submodules https://github.com/prasadm1022/hades-vault.git
+Set-Location hades-vault
 ```
 
 Optional: `npm test` runs the CLI test suite (no network, Docker or submodules needed).
@@ -184,21 +198,32 @@ Optional: `npm test` runs the CLI test suite (no network, Docker or submodules n
 ### 2. Create the configuration and the vault
 
 ```bash
-node bin/hades.mjs init --vault ../my-vault --workspace ..
-```
-
-```powershell
-node bin/hades.mjs init --vault ..\my-vault --workspace ..
+node bin/hades.mjs init
 ```
 
 This writes `hades.config.json` in the engine (git-ignored) and, when the vault folder has no
-`registry.json`, scaffolds it from `templates/vault/` and runs `git init` in it. Nothing is
-committed. Keep the vault in a **private** repository: it holds your clients' requirements and
-architecture. For a backup, add a private remote yourself:
+`registry.json`, scaffolds the vault at `.vault/` from `templates/vault/` and runs `git init` in it:
+the vault is its own repository, and the engine's `.gitignore` keeps it out of the engine
+repository. Nothing is committed. The workspace defaults to the engine's parent folder
+(`--workspace <path>` to change it). A vault inside the engine is stored in `hades.config.json` as
+the relative path `.vault`, so moving or renaming the engine folder keeps it.
+
+The vault holds your clients' requirements and architecture: keep it **private**. For a backup, add
+a private remote yourself (never a public one) and push it when you like. `init` commits nothing, so
+make the first vault commit before the first push (`git push` fails with "src refspec HEAD does not
+match any" on a vault without commits). First check that `.vault` is its own repository: the first
+command must print the `.vault` folder, not the engine folder (`hades doctor` checks this too, and
+`hades init` fixes it).
 
 ```bash
-git -C ../my-vault remote add origin <your-private-repository-url>
+git -C .vault rev-parse --show-toplevel
+git -C .vault add -A && git -C .vault commit -m "Initial vault"
+git -C .vault remote add origin <your-private-repository-url>
+git -C .vault push -u origin HEAD
 ```
+
+A custom location still works: `node bin/hades.mjs init --vault <path>` (or `HADES_VAULT`), for
+example a vault on an encrypted drive. Existing vault folders are used as they are.
 
 ### 3. Set up the pinned tools
 
@@ -284,12 +309,12 @@ is only for your convenience. Pick one:
 
 ```bash
 npm link                                                                  # option 1, in the engine folder
-echo 'alias hades="node $HOME/code/hades/bin/hades.mjs"' >> ~/.bashrc    # option 2 (zsh: ~/.zshrc)
+echo 'alias hades="node $HOME/code/hades-vault/bin/hades.mjs"' >> ~/.bashrc    # option 2 (zsh: ~/.zshrc)
 ```
 
 ```powershell
 if (-not (Test-Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force | Out-Null }
-Add-Content $PROFILE 'function hades { node C:\code\hades\bin\hades.mjs @args }'
+Add-Content $PROFILE 'function hades { node C:\code\hades-vault\bin\hades.mjs @args }'
 ```
 
 `npm link` also works on Windows; if PowerShell's execution policy refuses the npm shim, use the
@@ -429,7 +454,7 @@ git -C ../acme/portal log --oneline -5
 git -C ../acme/portal show --stat <hash>
 git -C ../acme/portal diff <hash>~1 <hash>
 git -C ../acme/portal push        # yours to run; feature-branch: push -u origin hades/<task-id>-<slug>
-git -C ../my-vault push           # your private vault remote, if any
+git -C .vault push               # your private vault remote, if any
 node bin/hades.mjs usage --task portal-001   # tokens and estimated cost of the task
 ```
 
@@ -480,7 +505,8 @@ nothing blocks a push or a secret read mechanically except the platform's own ap
 
 ### Quick setup per platform
 
-`~/code` is the workspace, `~/code/my-vault` the vault and `portal` an onboarded team. Run
+`~/code` is the workspace, `~/code/hades-vault` the engine, `~/code/hades-vault/.vault` the vault and
+`portal` an onboarded team. Run
 `node bin/hades.mjs export <target>` from the engine folder, do the steps under "Before first use",
 then start the agent in the workspace and type the command. Onboard projects with
 `/hades-new-team ...` as in Claude Code (`$hades-new-team ...` in Codex).
@@ -497,11 +523,11 @@ then start the agent in the workspace and type the command. Onboard projects wit
 | Roo Code, Aider, other AGENTS.md tools | `agents-md` | Register the MCP servers by hand where the tool supports MCP: command = your absolute Node path, args = `<engine>/bin/hades.mjs mcp serena` (and `rea`, `playwright`, `aws`). Aider: start it with `--read AGENTS.md --no-auto-commits`. Roo Code: servers in `.roo/mcp.json`, deny `git push` in `roo-cline.deniedCommands`. | `hades portal <requirements>` |
 
 Unattended runs: pick the line for your agent and run it in the workspace (`cd ~/code`). In
-PowerShell, write the paths out (`C:\code`, `C:\code\my-vault`): PowerShell does not expand `~` in
+PowerShell, write the paths out (`C:\code`, `C:\code\hades-vault\.vault`): PowerShell does not expand `~` in
 arguments to other programs. These lines follow each vendor's documentation and were not run here.
 
 ```bash
-codex exec -C ~/code --skip-git-repo-check --sandbox workspace-write -c approval_policy="never" -c sandbox_workspace_write.network_access=true --add-dir ~/code/my-vault --add-dir ~/code/hades/.hades '$hades portal <requirements>'   # Codex
+codex exec -C ~/code --skip-git-repo-check --sandbox workspace-write -c approval_policy="never" -c sandbox_workspace_write.network_access=true --add-dir ~/code/hades-vault/.vault --add-dir ~/code/hades-vault/.hades '$hades portal <requirements>'   # Codex
 agent -p "/hades portal <requirements>" --workspace ~/code --trust --approve-mcps --force --output-format stream-json   # Cursor
 gemini -p "/hades portal <requirements>" --approval-mode=yolo --output-format json   # Gemini CLI
 copilot -p "/hades portal <requirements>" -s --no-ask-user --allow-tool='read, write, shell(node:*), shell(git:*), serena, playwright' --deny-tool='shell(git push)'   # Copilot CLI
@@ -575,7 +601,7 @@ and coverage rules are unchanged. Run QA, integration review and security in a *
 
 ```json
 {
-  "vault": "/home/me/code/my-vault",
+  "vault": ".vault",
   "workspace": "/home/me/code",
   "aws": { "profile": "hades-deploy", "region": "eu-west-1", "read_only": false }
 }
@@ -583,7 +609,7 @@ and coverage rules are unchanged. Run QA, integration review and security in a *
 
 | Key | Meaning |
 |---|---|
-| `vault`, `workspace` | paths; `HADES_VAULT` and `HADES_WORKSPACE` override them |
+| `vault`, `workspace` | paths; a relative path is relative to the engine folder (`".vault"`, the default vault, git-ignored). Defaults: `<engine>/.vault` (a legacy `<engine>/vault` with a `registry.json` is still used while `.vault` does not exist) and the engine's parent folder. `HADES_VAULT` and `HADES_WORKSPACE` override them |
 | `aws.profile` or `aws.profiles` | profile(s) for the AWS MCP server and doctor; default `AWS_PROFILE` |
 | `aws.region` | where the AWS MCP server operates |
 | `aws.read_only` | `true` hides write-capable AWS MCP tools |
@@ -748,6 +774,7 @@ tools/                vendored tools (git submodules) and tools.lock.json
 docs/                 architecture, CLI, file formats, guides
 tests/                node:test suites (no network, Docker or submodules needed)
 .hades/, .tools-bin/  runtime state, logs, installed tools (git-ignored)
+.vault/               your vault: private, git-ignored, its own git repository (created by init)
 ```
 
 ## Upgrading and migrating from v1
@@ -766,11 +793,40 @@ node bin/hades.mjs doctor
 recorded autonomy. If you use other agents, run `hades export <target>` again (for Codex, trust the
 changed hook with `/hooks`).
 
+### Moving an existing vault to `.vault`
+
+The repository is now named `hades-vault` (`https://github.com/prasadm1022/hades-vault`) and the
+default vault is `<engine>/.vault`. An existing setup keeps working:
+a vault configured in `hades.config.json` stays where it is, and a legacy `<engine>/vault` is still
+found (`hades doctor` warns). To adopt the new layout:
+
+Run these steps from a terminal with no Claude Code (or other agent) session open: the installed
+guard hook, the agents and the `settings.json` allow rules hold the absolute engine path, so after a
+rename every session fails to start the hook (and with `"onFailure": "block"` every tool call is
+blocked) until `install` runs again.
+
+1. Optional: rename the engine folder to `hades-vault` and point the remote at the new URL
+   (`git remote set-url origin https://github.com/prasadm1022/hades-vault.git`). Then, right away and
+   before any agent session, run `node bin/hades.mjs install` from the renamed folder (and
+   `node bin/hades.mjs export <target>` again for each other agent you use).
+2. Move the vault folder (with its `.git`) to `<engine>/.vault`.
+3. Point the config at it: `node bin/hades.mjs init --vault .vault` (a relative path is relative to
+   the engine; stored as `.vault`), or edit `hades.config.json` to `"vault": ".vault"` by hand. `init`
+   keeps the configured workspace as an absolute path; change it the same way if it moved. Then run
+   `node bin/hades.mjs install` (the agents carry the absolute paths) and `node bin/hades.mjs doctor`,
+   which checks that the engine repository git-ignores the vault, that the vault is its own git
+   repository, and whether the vault's own notes (`CLAUDE.md`, `README.md`, `company/README.md`,
+   `company/playbooks/README.md`) still name the old engine folder (replace that path by hand).
+
+Until step 3, a `hades.config.json` that still names the old absolute vault path finds no
+`registry.json`: the CLI stops with "no vault", and the guard keeps protecting `<engine>/.vault`
+(and a legacy `<engine>/vault`) and warns on every allowed call.
+
 ### Migrating from HADES v1
 
 v1 kept the framework inside the vault; v2 splits it into this engine and your vault.
 
-1. Clone v2 and point it at the old vault:
+1. Clone v2 and point it at the old vault (or first move the old vault to `<engine>/.vault`):
    `node bin/hades.mjs init --vault <v1-vault> --workspace <projects-folder>`.
 2. Commit or stash the vault (files with uncommitted changes are skipped).
 3. Preview, then migrate: `node bin/hades.mjs migrate --dry-run`, then `node bin/hades.mjs migrate`.
@@ -845,7 +901,7 @@ and ccusage are accepted at the pinned version), or point `HADES_TOOL_<NAME>` at
 safety rules belong in `hooks/guard.mjs` with tests. Run `npm test` before a pull request.
 
 **Security.** Report vulnerabilities privately with GitHub's
-[Report a vulnerability](https://github.com/prasadm1022/hades/security/advisories/new) button, as
+[Report a vulnerability](https://github.com/prasadm1022/hades-vault/security/advisories/new) button, as
 described in [`SECURITY.md`](SECURITY.md). Never put details in a public issue. Report
 vulnerabilities in a vendored tool to its maintainers.
 

@@ -37,6 +37,9 @@ an LLM pass finishes what needs judgement.
 
 1. **Update and install the engine.** Clone v2 with submodules (`getting-started.md` steps 2 and 4)
    and point it at your existing vault: `hades init --vault <v1 vault> --workspace <projects folder>`.
+   To use the default layout, first move the v1 vault folder (with its `.git`) to `<engine>/.vault`
+   (git-ignored by the engine) and run `hades init --vault .vault` (relative to the engine; or set
+   `"vault": ".vault"` in `hades.config.json` by hand); a vault elsewhere works too.
 2. **Commit or stash the vault.** Files with uncommitted changes are skipped (see below).
 3. **Preview:** `hades migrate --dry-run` (`--json` lists every action).
 4. **Migrate:** `hades migrate`. It
