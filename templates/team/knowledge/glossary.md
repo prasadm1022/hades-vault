@@ -1,0 +1,4 @@
+# Glossary - {{TEAM}}
+
+| Term | Meaning |
+|---|---|

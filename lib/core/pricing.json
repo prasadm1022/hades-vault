@@ -1,0 +1,25 @@
+{
+  "$comment": "estimate; edit pricing.json. USD per million tokens, Anthropic first-party API list prices for standard (non-fast, non-batch) requests. cache_write = 5-minute cache write (1.25x input), cache_write_1h = 1-hour cache write (2x input), cache_read = cache hit. null = price not verified: hades usage shows tokens only for that model. Keys are model IDs without date suffix; 'families' is the fallback for unlisted versions and is null on purpose (a family alias points at different models over time). Subscription plans are not billed per token, so the figure is an API-equivalent estimate.",
+  "as_of": "2026-10-06",
+  "source": "Claude API reference (models and prompt-caching pricing); confirm at https://www.anthropic.com/pricing",
+  "models": {
+    "claude-fable-5-1": { "input": 10, "output": 50, "cache_write": 12.5, "cache_write_1h": 20, "cache_read": 0.25 },
+    "claude-fable-5": { "input": 10, "output": 50, "cache_write": 12.5, "cache_write_1h": 20, "cache_read": 1 },
+    "claude-opus-5-5": { "input": 4, "output": 20, "cache_write": 5, "cache_write_1h": 8, "cache_read": 0.2 },
+    "claude-opus-5": { "input": 5, "output": 25, "cache_write": 6.25, "cache_write_1h": 10, "cache_read": 0.5 },
+    "claude-opus-4-8": { "input": 5, "output": 25, "cache_write": 6.25, "cache_write_1h": 10, "cache_read": 0.5 },
+    "claude-opus-4-7": { "input": 5, "output": 25, "cache_write": 6.25, "cache_write_1h": 10, "cache_read": 0.5 },
+    "claude-opus-4-6": { "input": 5, "output": 25, "cache_write": 6.25, "cache_write_1h": 10, "cache_read": 0.5 },
+    "claude-sonnet-5-5": { "input": 2, "output": 10, "cache_write": 2.5, "cache_write_1h": 4, "cache_read": 0.2 },
+    "claude-sonnet-5": { "input": 2, "output": 10, "cache_write": 2.5, "cache_write_1h": 4, "cache_read": 0.2 },
+    "claude-sonnet-4-6": { "input": 3, "output": 15, "cache_write": 3.75, "cache_write_1h": 6, "cache_read": 0.3 },
+    "claude-haiku-4-5": { "input": 1, "output": 5, "cache_write": 1.25, "cache_write_1h": 2, "cache_read": 0.1 },
+    "claude-haiku-5-5": { "input": null, "output": null, "cache_write": null, "cache_write_1h": null, "cache_read": null, "note": "tiered by prompt size ($0.10/$0.50 up to 100K prompt tokens, $0.50/$2.50 above); cache prices not verified" }
+  },
+  "families": {
+    "fable": null,
+    "opus": null,
+    "sonnet": null,
+    "haiku": null
+  }
+}

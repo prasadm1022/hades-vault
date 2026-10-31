@@ -1,0 +1,42 @@
+{
+  "version": "1.181.0",
+  "results": [
+    {
+      "check_id": "javascript.express.security.audit.xss.direct-response-write.direct-response-write",
+      "path": "src/server.js",
+      "start": { "line": 21, "col": 5, "offset": 400 },
+      "end": { "line": 21, "col": 30, "offset": 425 },
+      "extra": { "message": "Detected directly writing to a Response object from user-defined input.", "severity": "ERROR", "metadata": {}, "lines": "requires login", "fingerprint": "requires login", "is_ignored": false }
+    },
+    {
+      "check_id": "javascript.express.security.audit.xss.direct-response-write.direct-response-write",
+      "path": "src/server.js",
+      "start": { "line": 21, "col": 5, "offset": 400 },
+      "end": { "line": 21, "col": 30, "offset": 425 },
+      "extra": { "message": "duplicate", "severity": "ERROR", "metadata": {}, "lines": "requires login", "fingerprint": "requires login", "is_ignored": false }
+    },
+    {
+      "check_id": "javascript.lang.security.audit.unsafe-formatstring",
+      "path": "src/log.js",
+      "start": { "line": 4, "col": 1, "offset": 50 },
+      "end": { "line": 4, "col": 20, "offset": 69 },
+      "extra": { "message": "format string", "severity": "WARNING", "metadata": {}, "lines": "requires login", "fingerprint": "requires login", "is_ignored": false }
+    },
+    {
+      "check_id": "generic.ci.security.use-frozen-lockfile",
+      "path": "Dockerfile",
+      "start": { "line": 3, "col": 1, "offset": 10 },
+      "end": { "line": 3, "col": 20, "offset": 29 },
+      "extra": { "message": "lockfile", "severity": "INFO", "metadata": {}, "lines": "requires login", "fingerprint": "requires login", "is_ignored": false }
+    },
+    {
+      "check_id": "javascript.lang.security.detect-eval-with-expression",
+      "path": "src/legacy.js",
+      "start": { "line": 9, "col": 1, "offset": 90 },
+      "end": { "line": 9, "col": 20, "offset": 109 },
+      "extra": { "message": "eval (nosem)", "severity": "ERROR", "metadata": {}, "lines": "requires login", "fingerprint": "requires login", "is_ignored": true }
+    }
+  ],
+  "errors": [],
+  "paths": { "scanned": ["src/server.js", "src/log.js", "src/legacy.js", "Dockerfile"] }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "legacy-ui",
+  "scripts": {
+    "start": "react-scripts start",
+    "test": "react-scripts test"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-scripts": "5.0.1"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "@programName": "ZAP",
+  "@version": "2.17.0",
+  "site": [
+    {
+      "@name": "https://shop.example.com",
+      "@host": "shop.example.com",
+      "@port": "443",
+      "@ssl": "true",
+      "alerts": [
+        {
+          "pluginid": "10038",
+          "alert": "Content Security Policy (CSP) Header Not Set",
+          "riskcode": "2",
+          "riskdesc": "Medium (High)",
+          "instances": [{ "uri": "https://shop.example.com/", "method": "GET" }],
+          "count": "3"
+        },
+        {
+          "pluginid": "10021",
+          "alert": "X-Content-Type-Options Header Missing",
+          "riskcode": "1",
+          "riskdesc": "Low (Medium)",
+          "instances": [{ "uri": "https://shop.example.com/logo.png", "method": "GET" }],
+          "count": "4"
+        }
+      ]
+    }
+  ]
+}

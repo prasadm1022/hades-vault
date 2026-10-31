@@ -1,0 +1,18 @@
+TAP version 13
+# Subtest: adds
+ok 1 - adds
+  ---
+  duration_ms: 0.5
+  ...
+# Subtest: subtracts
+not ok 2 - subtracts
+  ---
+  duration_ms: 0.7
+  failureType: 'testCodeFailure'
+  error: 'Expected values to be strictly equal: 1 !== 2'
+  code: 'ERR_ASSERTION'
+  ...
+1..2
+# tests 2
+# pass 1
+# fail 1

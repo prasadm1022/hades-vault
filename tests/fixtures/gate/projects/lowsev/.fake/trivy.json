@@ -1,0 +1,14 @@
+{
+  "SchemaVersion": 2,
+  "Results": [
+    {
+      "Target": "requirements.txt",
+      "Class": "lang-pkgs",
+      "Type": "pip",
+      "Vulnerabilities": [
+        { "VulnerabilityID": "CVE-2023-0002", "PkgName": "urllib3", "InstalledVersion": "1.26.0", "FixedVersion": "1.26.18", "Severity": "MEDIUM" },
+        { "VulnerabilityID": "CVE-2023-0003", "PkgName": "idna", "InstalledVersion": "3.3", "FixedVersion": "3.7", "Severity": "LOW" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+    "version": 2,
+    "vault": "C:/Users/owner/git/v1-vault",
+    "git_root": "C:/Users/owner/git",
+    "hierarchy": "organizations -> teams -> projects -> agents -> skills",
+    "organizations": {
+        "acme": {
+            "org_dir": "organizations/acme",
+            "root_path": "C:/Users/owner/git/acme",
+            "description": "Acme products",
+            "aliases": [
+                "Acme"
+            ],
+            "created": "2026-09-01"
+        },
+        "globex": {
+            "org_dir": "organizations/globex",
+            "root_path": "C:/Users/owner/git/globex",
+            "description": "Globex online shop",
+            "aliases": [
+                "gx,globex-inc"
+            ],
+            "created": "2026-09-02"
+        }
+    },
+    "teams": {
+        "portal": {
+            "organization": "acme",
+            "type": "main",
+            "project_path": "C:/Users/owner/git/acme/portal",
+            "team_dir": "organizations/acme/teams/portal",
+            "description": "Customer portal: API and web app",
+            "aliases": [
+                "acme-portal"
+            ],
+            "status": "active",
+            "created": "2026-09-01"
+        },
+        "docs-site": {
+            "organization": "acme",
+            "type": "sub",
+            "project_path": "C:/Users/owner/git/acme/docs-site",
+            "team_dir": "organizations/acme/teams/docs-site",
+            "description": "Documentation site",
+            "aliases": [
+                "docs,ds"
+            ],
+            "created": "2026-09-03"
+        },
+        "shop": {
+            "organization": "globex",
+            "project_path": "C:/Users/owner/git/globex/shop",
+            "team_dir": "organizations/globex/teams/shop",
+            "description": "Online shop monorepo",
+            "status": "active",
+            "created": "2026-09-02"
+        }
+    }
+}

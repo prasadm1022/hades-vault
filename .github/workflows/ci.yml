@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [22, 24]
+    steps:
+      # TODO(supply-chain): pin both actions by full commit SHA with a "# vX.Y.Z" comment, e.g.
+      #   uses: actions/checkout@<40-char sha> # vX.Y.Z
+      # The SHAs could not be verified offline when this file was written, so major tags are used.
+      - name: Checkout (no submodules; tests must not need them)
+        uses: actions/checkout@v5
+        with:
+          submodules: false
+          persist-credentials: false
+      - name: Set up Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Test
+        run: npm test
+      - name: CLI smoke test
+        run: node bin/hades.mjs --help

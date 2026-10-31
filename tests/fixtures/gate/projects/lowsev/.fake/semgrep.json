@@ -1,0 +1,20 @@
+{
+  "version": "1.181.0",
+  "results": [
+    {
+      "check_id": "python.lang.best-practice.open-never-closed",
+      "path": "app/io.py",
+      "start": { "line": 12, "col": 5, "offset": 200 },
+      "end": { "line": 12, "col": 30, "offset": 225 },
+      "extra": { "message": "file not closed", "severity": "WARNING", "metadata": {}, "is_ignored": false }
+    },
+    {
+      "check_id": "python.lang.correctness.useless-comparison",
+      "path": "app/math.py",
+      "start": { "line": 3, "col": 1, "offset": 20 },
+      "end": { "line": 3, "col": 10, "offset": 29 },
+      "extra": { "message": "useless", "severity": "INFO", "metadata": {}, "is_ignored": false }
+    }
+  ],
+  "errors": []
+}

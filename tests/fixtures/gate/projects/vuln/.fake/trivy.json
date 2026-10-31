@@ -1,0 +1,26 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "/work/vuln",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "package-lock.json",
+      "Class": "lang-pkgs",
+      "Type": "npm",
+      "Vulnerabilities": [
+        { "VulnerabilityID": "CVE-2021-23337", "PkgName": "lodash", "InstalledVersion": "4.17.20", "FixedVersion": "4.17.21", "Severity": "HIGH", "Title": "command injection" },
+        { "VulnerabilityID": "CVE-2021-44906", "PkgName": "minimist", "InstalledVersion": "1.2.5", "FixedVersion": "1.2.6", "Severity": "CRITICAL", "Title": "prototype pollution" },
+        { "VulnerabilityID": "CVE-2022-0001", "PkgName": "debug", "InstalledVersion": "2.6.8", "FixedVersion": "", "Severity": "MEDIUM", "Title": "ReDoS" }
+      ]
+    },
+    {
+      "Target": "Dockerfile",
+      "Class": "config",
+      "Type": "dockerfile",
+      "Misconfigurations": [
+        { "ID": "DS002", "AVDID": "AVD-DS-0002", "Title": "Image user should not be 'root'", "Severity": "HIGH", "Status": "FAIL", "CauseMetadata": { "StartLine": 1, "EndLine": 1 } },
+        { "ID": "DS026", "AVDID": "AVD-DS-0026", "Title": "No HEALTHCHECK defined", "Severity": "LOW", "Status": "PASS", "CauseMetadata": {} }
+      ]
+    }
+  ]
+}

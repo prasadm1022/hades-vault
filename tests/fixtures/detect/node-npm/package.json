@@ -1,0 +1,14 @@
+{
+  "name": "acme-web",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint .",
+    "dev": "vite",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.6.0"
+  }
+}

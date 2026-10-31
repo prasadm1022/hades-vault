@@ -1,0 +1,2 @@
+# accepted: test fixture value, not a real key
+config/app.env:generic-api-key:3

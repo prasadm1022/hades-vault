@@ -1,0 +1,8 @@
+
+> demo@1.0.0 types
+> tsc --noEmit
+
+src/app.ts(3,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/api/client.ts(18,12): error TS2339: Property 'fetchUser' does not exist on type 'Api'.
+
+Found 2 errors in 2 files.

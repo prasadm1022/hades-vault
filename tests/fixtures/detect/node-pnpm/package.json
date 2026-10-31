@@ -1,0 +1,9 @@
+{
+  "name": "acme-lib",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "2.0.0"
+  }
+}

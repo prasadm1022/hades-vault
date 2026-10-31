@@ -1,0 +1,35 @@
+{
+  "name": "hades-company",
+  "version": "2.0.0",
+  "description": "HADES - an autonomous software company for Claude Code: business analysis, architecture, planning, build, QA, deploy and security testing by role agents, with token-efficient handoffs and deterministic safety guards.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "author": "Prasad Madusanka",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prasadm1022/hades.git"
+  },
+  "homepage": "https://github.com/prasadm1022/hades#readme",
+  "bugs": {
+    "url": "https://github.com/prasadm1022/hades/issues"
+  },
+  "bin": {
+    "hades": "bin/hades.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "doctor": "node bin/hades.mjs doctor"
+  },
+  "keywords": [
+    "claude-code",
+    "agents",
+    "multi-agent",
+    "software-engineering",
+    "automation",
+    "devsecops"
+  ]
+}

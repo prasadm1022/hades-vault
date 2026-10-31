@@ -1,0 +1,888 @@
+{
+  "$comment": "HADES guard policy, merged over the built-in defaults in guard.mjs: objects merge, arrays and scalars replace. Placeholders: {home} {engine} {vault} {workspace} {config} {projects} {orgs} {ostmp} (OS temp dirs) {temp} (tempDirs) {claude} (CLAUDE_CONFIG_DIR or ~/.claude) {policy} (this file). The guard's own files, this policy file, the HADES config and the Claude settings/agents/skills/hooks stay protected whatever this file says. Rule ids: hooks/README.md. Regenerate the shipped copy with: node hooks/guard.mjs --print-policy > hooks/guard-policy.json",
+  "version": 1,
+  "tempDirs": [
+    "{ostmp}",
+    "/tmp",
+    "/var/tmp",
+    "/private/tmp",
+    "/private/var/folders"
+  ],
+  "protectedPaths": [
+    "{home}",
+    "{home}/.ssh",
+    "{home}/.aws",
+    "{home}/.gnupg",
+    "{home}/.kube",
+    "{home}/.config",
+    "{home}/.claude",
+    "{claude}",
+    "{workspace}",
+    "{vault}",
+    "{engine}",
+    "{engine}/hooks",
+    "{projects}",
+    "{orgs}",
+    "/bin",
+    "/boot",
+    "/dev",
+    "/etc",
+    "/home",
+    "/lib",
+    "/lib64",
+    "/opt",
+    "/proc",
+    "/root",
+    "/sbin",
+    "/srv",
+    "/sys",
+    "/usr",
+    "/var",
+    "/Applications",
+    "/Library",
+    "/System",
+    "/Users",
+    "/Volumes",
+    "C:/Windows",
+    "C:/Program Files",
+    "C:/Program Files (x86)",
+    "C:/ProgramData",
+    "C:/Users"
+  ],
+  "selfProtected": [
+    "{engine}/hooks",
+    "{engine}/hooks/**",
+    "{engine}/hades.config.json",
+    "{config}",
+    "{policy}",
+    "{home}/.claude.json",
+    "{claude}/settings*.json",
+    "{claude}/hooks/**",
+    "{claude}/agents/hades",
+    "{claude}/agents/hades/**",
+    "{claude}/agents/hades-*",
+    "{claude}/skills/hades*",
+    "{claude}/skills/hades*/**",
+    "{claude}/plugins/**",
+    "{claude}/.claude.json",
+    "{workspace}/.claude",
+    "{workspace}/.claude/**",
+    "{workspace}/CLAUDE.md",
+    "{workspace}/AGENTS.md",
+    "**/.claude/settings*.json",
+    "**/.claude/hooks/**",
+    "**/.claude/agents/hades",
+    "**/.claude/agents/hades/**",
+    "**/.claude/agents/hades-*",
+    "**/.claude/skills/hades*",
+    "**/.claude/skills/hades*/**",
+    "**/.mcp.json",
+    "**/.claude.json",
+    "**/managed-settings*.json",
+    "**/managed-mcp.json"
+  ],
+  "selfProtectedNames": [
+    "hooks/guard.mjs",
+    "guard-policy.json",
+    "hades.config.json",
+    ".claude/settings",
+    ".claude.json",
+    ".mcp.json",
+    "managed-settings",
+    "managed-mcp.json",
+    ".claude/hooks/",
+    ".claude/agents/hades",
+    ".claude/skills/hades"
+  ],
+  "gitConfigFiles": [
+    "{home}/.gitconfig",
+    "{home}/.config/git/config",
+    "{home}/.config/git/attributes",
+    "/etc/gitconfig"
+  ],
+  "neverWritable": [
+    "{engine}/tools",
+    "{engine}/tools/**",
+    "{engine}/.tools-bin/**"
+  ],
+  "stateFiles": {
+    "tools": "(^|/)tasks/[^/]+/(state|defects|work-plan|gates)\\.json$|(^|/)teams/[^/]+/team\\.json$",
+    "shell": "(^|/)tasks/[^/]+/(state|defects|work-plan|gates)\\.json$|(^|/)teams/[^/]+/team\\.json$"
+  },
+  "legacyDirs": [
+    "{vault}/**/legacy/**"
+  ],
+  "roles": {
+    "default": [
+      "{vault}",
+      "{temp}"
+    ],
+    "hades-business-analyst": [
+      "{vault}",
+      "{temp}"
+    ],
+    "hades-software-architect": [
+      "{vault}",
+      "{temp}"
+    ],
+    "hades-tech-lead": [
+      "{projects}",
+      "{vault}",
+      "{workspace}",
+      "{temp}"
+    ],
+    "hades-cybersecurity-engineer": [
+      "{vault}",
+      "{temp}"
+    ],
+    "hades-knowledge-curator": [
+      "{vault}",
+      "{temp}"
+    ],
+    "hades-scout": [],
+    "hades-backend-engineer": [
+      "{projects}",
+      "{vault}",
+      "{workspace}",
+      "{temp}"
+    ],
+    "hades-frontend-engineer": [
+      "{projects}",
+      "{vault}",
+      "{workspace}",
+      "{temp}"
+    ],
+    "hades-aiml-data-engineer": [
+      "{projects}",
+      "{vault}",
+      "{workspace}",
+      "{temp}"
+    ],
+    "hades-qa-engineer": [
+      "{projects}",
+      "{vault}",
+      "{workspace}",
+      "{temp}"
+    ],
+    "hades-devops-engineer": [
+      "{projects}",
+      "{vault}",
+      "{workspace}",
+      "{temp}"
+    ]
+  },
+  "secrets": {
+    "paths": [
+      "(^|/)\\.env(\\.[^/]+)?$",
+      "(^|/)[^/]+\\.env$",
+      "(^|/)\\.envrc$",
+      "\\.(pem|key|p12|pfx|p8|ppk|jks|keystore|kdbx|ovpn)$",
+      "(^|/)id_(rsa|dsa|ecdsa|ed25519)(_sk)?([._-][^/]*)?$",
+      "(^|/)\\.ssh/",
+      "(^|/)\\.gnupg/",
+      "(^|/)\\.aws/(credentials|sso/cache/|cli/cache/)",
+      "(^|/)\\.azure/(accesstokens\\.json|msal_token_cache|service_principal_entries)",
+      "(^|/)\\.config/gcloud/(credentials\\.db|access_tokens\\.db|application_default_credentials\\.json|legacy_credentials/)",
+      "(^|/)\\.docker/config\\.json$",
+      "(^|/)\\.kube/config$",
+      "(^|/)(kubeconfig|[^/]+\\.kubeconfig)(\\.ya?ml)?$",
+      "(^|/)\\.git-credentials$",
+      "(^|/)(\\.npmrc|\\.pypirc|\\.netrc|_netrc|\\.pgpass|\\.vault-token|\\.terraformrc|terraform\\.rc|credentials\\.tfrc\\.json)$",
+      "(^|/)\\.config/gh/hosts\\.yml$",
+      "^/proc/[^/]+/environ$"
+    ],
+    "exceptions": [
+      "\\.pub$",
+      "(^|/)\\.ssh/(config|known_hosts(\\.old)?)$",
+      "(^|/)\\.env\\.(example|sample|template|dist)$",
+      "(^|/)(example|sample|template)\\.env$"
+    ],
+    "notesStem": "(^|[._-])(credentials?|secrets?|passwords?|passwd)([._-](local|dev|development|prod|production|staging|test|backup|bak|old|[0-9]+))?$",
+    "notesExt": "^(txt|md|json|ya?ml|csv|ini|toml|cfg|conf|xml|properties)$",
+    "globProbes": [
+      ".env",
+      ".env.local",
+      ".env.production",
+      "id_rsa",
+      "id_ed25519",
+      "server.key",
+      "cert.pem",
+      "cert.p12",
+      "cert.pfx",
+      "release.jks",
+      ".npmrc",
+      ".netrc",
+      ".git-credentials",
+      "credentials.json",
+      "secrets.yaml"
+    ],
+    "varName": "(secret|token|passw|passphrase|api_?key|private_?key|access_?key|credential|session_?key|cookie|auth(?!or)|(^|_)pat$|^pat_|dsn$|connection_?string|database_url|webhook_url)",
+    "useCommands": [
+      "rm",
+      "rmdir",
+      "rd",
+      "del",
+      "erase",
+      "remove-item",
+      "unlink",
+      "shred",
+      "ls",
+      "dir",
+      "get-childitem",
+      "test-path",
+      "test",
+      "[",
+      "stat",
+      "touch",
+      "chmod",
+      "chown",
+      "icacls",
+      "attrib",
+      "ssh-add",
+      "ssh-keygen",
+      "source",
+      ".",
+      "cd",
+      "set-location",
+      "mkdir"
+    ],
+    "gitUse": [
+      "check-ignore",
+      "status",
+      "ls-files",
+      "rm"
+    ],
+    "useFlags": {
+      "docker": [
+        "--env-file"
+      ],
+      "docker-compose": [
+        "--env-file"
+      ],
+      "podman": [
+        "--env-file"
+      ],
+      "podman-compose": [
+        "--env-file"
+      ],
+      "nerdctl": [
+        "--env-file"
+      ],
+      "finch": [
+        "--env-file"
+      ],
+      "node": [
+        "--env-file",
+        "--env-file-if-exists"
+      ],
+      "bun": [
+        "--env-file"
+      ],
+      "deno": [
+        "--env-file"
+      ],
+      "ssh": [
+        "-i"
+      ],
+      "scp": [
+        "-i"
+      ],
+      "sftp": [
+        "-i"
+      ],
+      "rsync": [
+        "-e",
+        "--rsh"
+      ],
+      "kubectl": [
+        "--kubeconfig",
+        "--from-env-file",
+        "--from-file",
+        "--client-key",
+        "--client-certificate",
+        "--certificate-authority"
+      ],
+      "helm": [
+        "--kubeconfig",
+        "--key-file",
+        "--cert-file",
+        "--ca-file"
+      ],
+      "curl": [
+        "--cert",
+        "-E",
+        "--key",
+        "--cacert",
+        "--capath",
+        "--proxy-cert",
+        "--proxy-key",
+        "--proxy-cacert"
+      ],
+      "wget": [
+        "--certificate",
+        "--private-key",
+        "--ca-certificate"
+      ],
+      "gcloud": [
+        "--key-file"
+      ],
+      "ansible-playbook": [
+        "--private-key",
+        "--key-file",
+        "--vault-password-file"
+      ],
+      "ansible": [
+        "--private-key",
+        "--key-file",
+        "--vault-password-file"
+      ],
+      "invoke-webrequest": [
+        "-certificate"
+      ],
+      "invoke-restmethod": [
+        "-certificate"
+      ]
+    }
+  },
+  "pasteHosts": [
+    "pastebin.com",
+    "paste.ee",
+    "pastie.org",
+    "hastebin.com",
+    "termbin.com",
+    "ix.io",
+    "sprunge.us",
+    "dpaste.org",
+    "dpaste.com",
+    "paste.rs",
+    "paste.mozilla.org",
+    "rentry.co",
+    "rentry.org",
+    "ghostbin.com",
+    "controlc.com",
+    "justpaste.it",
+    "transfer.sh",
+    "0x0.st",
+    "file.io",
+    "tmpfiles.org",
+    "catbox.moe",
+    "bashupload.com",
+    "temp.sh",
+    "oshi.at",
+    "gofile.io",
+    "filebin.net",
+    "pixeldrain.com",
+    "webhook.site",
+    "requestbin.com",
+    "pipedream.net",
+    "beeceptor.com",
+    "gist.github.com",
+    "api.github.com/gists",
+    "gist.githubusercontent.com"
+  ],
+  "commandRules": [
+    {
+      "id": "git.push",
+      "re": "^(git|hub) (push|send-pack|http-push)( |$)"
+    },
+    {
+      "id": "git.push",
+      "re": "^(git|hub) (subtree push|lfs push|svn dcommit|p4 submit)( |$)"
+    },
+    {
+      "id": "git.push",
+      "re": "^gh-pages( |$)"
+    },
+    {
+      "id": "git.rewrite",
+      "re": "^(git|hub) (rebase|filter-branch|filter-repo|update-ref|replace|fast-import)( |$)",
+      "unless": "^(git|hub) rebase --abort$"
+    },
+    {
+      "id": "git.rewrite",
+      "re": "^(git-filter-repo|bfg)( |$)"
+    },
+    {
+      "id": "git.rewrite",
+      "re": "^(git|hub) commit( .*)? --amend( |=|$)"
+    },
+    {
+      "id": "git.rewrite",
+      "re": "^(git|hub) pull( .*)? (--rebase(=(true|merges|interactive|i|m))?|-r)( |$)"
+    },
+    {
+      "id": "git.rewrite",
+      "re": "^(git|hub) reset( .*)? (--soft|--keep|[^ -][^ ]*[~^][0-9]*|[^ ]*@\\{[^ }]*\\}|orig_head|fetch_head|[0-9a-f]{4,40})( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "git.rewrite",
+      "re": "^(git|hub) reset( .*)? (origin|upstream)/\\S+( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) reset( .*)? --(hard|merge)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) clean(?!( .*)? (-[a-zA-Z]*n[a-zA-Z]*|--dry-run)( |$))( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) checkout( .*)? (-f|--force|\\.|\\./|\\*|:/|:/\\.|:/\\*)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) restore(?!( .*)? (--staged|-S)( |$))( .*)? (\\.|\\./|\\*|:/|:/\\.)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) restore( .*)? (--worktree|-W|-[a-zA-Z]*W[a-zA-Z]*)( .*)? (\\.|\\./|\\*|:/|:/\\.)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) (read-tree( .*)? (-u|--reset)|checkout-index( .*)? (-f|--force|-a|--all|-[a-zA-Z]*[fa][a-zA-Z]*))( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) switch( .*)? (-f|--force|--discard-changes)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) stash (drop|clear)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) rm(?!( .*)? --cached( |$))( .*)? (\\.|\\./|\\*|:/)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) worktree remove( .*)? (-f|--force)( |$)"
+    },
+    {
+      "id": "git.discard",
+      "re": "^(git|hub) (reflog (expire|delete)|prune|gc( .*)? --prune(=\\S+)?)( |$)"
+    },
+    {
+      "id": "git.force",
+      "re": "^(git|hub) branch( .*)? (-[a-zA-Z]*[DMCf][a-zA-Z]*|--force)( |$)"
+    },
+    {
+      "id": "git.force",
+      "re": "^(git|hub) (switch( .*)? -C|checkout( .*)? -B)( |$)"
+    },
+    {
+      "id": "git.force",
+      "re": "^(git|hub) (add|tag)( .*)? (-[a-zA-Z]*f[a-zA-Z]*|--force)( |$)"
+    },
+    {
+      "id": "git.config",
+      "re": "^(git|hub) config( .*)? (--global|--system)( |$)",
+      "unless": "( --get[a-z-]*| --list| -l| --show-origin| --show-scope)( |$)|^(git|hub) config (--global|--system)( --[a-z-]+)* [^ -]\\S*$"
+    },
+    {
+      "id": "git.config",
+      "re": "^(git|hub) config( .*)? (alias|include|includeif)\\.|^(git|hub) config( .*)? core\\.hookspath( |=|$)|^(git|hub) config( .*)? (-e|--edit)( |$)",
+      "flags": "i",
+      "unless": "( --get[a-z-]*| --list| -l)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^gh (pr|issue) (create|new|merge|close|reopen|edit|comment|review|ready|lock|unlock|pin|unpin|transfer|delete|develop|revert|update-branch)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^gh release (?!(list|view|download|ls)( |$))\\S"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^gh repo (create|new|delete|sync|rename|archive|unarchive|edit|fork|deploy-key)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^gh gist (create|new|edit|delete|rename)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^gh workflow run( |$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "git.hosting",
+      "re": "^gh (secret|variable|label|ruleset|cache|ssh-key|gpg-key|workflow|run|codespace|project|extension|ext|org|alias|auth) (set|delete|remove|create|edit|add|enable|disable|rerun|cancel|clone|install|upgrade|import|close|copy|link|unlink|login|logout|refresh|setup-git|switch)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^(gh|glab) api( .*)? (-X[ =]?|--method[ =]?)(POST|PUT|PATCH|DELETE)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^(gh|glab) api( .*)? (-f|-F|--field|--raw-field|--input)( |=|$|\\S)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^glab (mr|issue|release|repo|snippet|label|variable|schedule|ci|deploy-key|ssh-key|gpg-key|incident|changelog|stack|token|alias|auth|cluster) (create|new|merge|delete|edit|close|reopen|comment|note|approve|revoke|rebase|update|upload|run|retry|cancel|set|add|fork|archive|transfer|unarchive|login|logout|play|trigger|rotate)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^hub (pull-request|create|delete|fork|gist|sync)( |$)"
+    },
+    {
+      "id": "git.hosting",
+      "re": "^hub (release|issue) (create|edit|delete|update|transfer)( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(npm|pnpm|bun) publish( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^yarn (npm )?publish( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(lerna|changeset|changesets) publish( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(np|semantic-release|release-it|publish-please)( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^twine upload( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(poetry|flit|hatch|uv|pdm|maturin|rye|cargo|deno|jsr|vsce|ovsx) publish( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(gem|pod trunk|dotnet nuget|nuget) push( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(dart|flutter) pub publish( |$)"
+    },
+    {
+      "id": "publish.package",
+      "re": "^(mix hex\\.publish|conda upload|anaconda upload)( |$)"
+    },
+    {
+      "id": "publish.artifact",
+      "re": "^mvn( .*)? deploy(:\\S+)?( |$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "publish.artifact",
+      "re": "^(gradle|gradlew)( .*)? publish(?!ToMavenLocal)[A-Za-z]*( |$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "publish.image",
+      "re": "^(docker|podman|buildah|nerdctl|finch) (image |manifest )?push( |$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "publish.image",
+      "re": "^(docker|podman|nerdctl|finch) (buildx )?(build|bake)( .*)? --push( |=|$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "publish.image",
+      "re": "^(crane|oras|regctl) (push|copy|cp|image copy)( |$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "publish.image",
+      "re": "^(skopeo copy|helm push|helm cm-push)( |$)",
+      "allowRoles": [
+        "hades-devops-engineer"
+      ]
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws secretsmanager (get-secret-value|batch-get-secret-value)( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws configure export-credentials( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws configure get \\S*(secret|session_token|access_key)",
+      "flags": "i"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws ssm get-parameters?(-by-path)?( .*)? --with-decryption( |=|$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws iam create-access-key( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws sts (get-session-token|assume-role\\S*|get-federation-token)( |$)",
+      "okCaptured": true
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws (ecr|ecr-public) get-login-password( |$)",
+      "okCaptured": true,
+      "okPipedTo": "^(docker|podman|helm|oras|crane|skopeo|finch|nerdctl|buildah|regctl) (.* )?login( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^aws codeartifact get-authorization-token( |$)",
+      "okCaptured": true
+    },
+    {
+      "id": "secrets.print",
+      "re": "^gh auth token( |$)",
+      "okCaptured": true,
+      "okPipedTo": "^(docker|podman|helm|oras|crane|skopeo|finch|nerdctl|buildah|regctl) (.* )?login( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^gcloud auth (application-default )?print-(access|identity)-token( |$)",
+      "okCaptured": true,
+      "okPipedTo": "^(docker|podman|helm|oras|crane|skopeo|finch|nerdctl|buildah|regctl) (.* )?login( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^az (account get-access-token|acr login( .*)? --expose-token)( |$)",
+      "okCaptured": true
+    },
+    {
+      "id": "secrets.print",
+      "re": "^kubectl get secrets?([/ ].*)? (-o|--output)( |=)?\\S*(json|yaml|template)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^(vault (kv get|read)|op read|op item get( .*)? --reveal)( |$)"
+    },
+    {
+      "id": "secrets.print",
+      "re": "^(curl|wget|invoke-webrequest|invoke-restmethod)( .*)? \\S*(localhost|127\\.0\\.0\\.1):2773",
+      "flags": "i"
+    },
+    {
+      "id": "secrets.env-print",
+      "re": "^(get-item|get-childitem|get-content|gi|gci|gc|dir|ls|cat|type)( .*)? env:[\\\\/]?\\S*(secret|token|passw|key|credential)",
+      "flags": "i"
+    },
+    {
+      "id": "secrets.env-dump",
+      "re": "^(env|printenv)( -0| --null)?$"
+    },
+    {
+      "id": "secrets.env-dump",
+      "re": "^set$"
+    },
+    {
+      "id": "secrets.env-dump",
+      "re": "^(export|declare|typeset)( -[a-zA-Z]+)*$"
+    },
+    {
+      "id": "secrets.env-dump",
+      "re": "^(get-childitem|get-item|dir|ls|gci|gi)( -path| -literalpath)? env:(\\\\|/)?(\\S*\\*\\S*)?$",
+      "flags": "i"
+    },
+    {
+      "id": "cloud.destroy",
+      "re": "^(terraform|tofu|terragrunt|pulumi|cdk|cdktf|sst) (.* )?destroy( |$)"
+    },
+    {
+      "id": "cloud.destroy",
+      "re": "^terraform (.* )?apply( .*)? -destroy( |$)"
+    },
+    {
+      "id": "cloud.destroy",
+      "re": "^aws s3 rb( |$)|^aws s3 rm( .*)? --recursive( |$)|^aws s3api delete-bucket( |$)"
+    },
+    {
+      "id": "cloud.destroy",
+      "re": "^aws (cloudformation delete-stack|rds delete-db-(instance|cluster)|dynamodb delete-table|ec2 terminate-instances|ec2 delete-(vpc|volume|snapshot)|eks delete-cluster|ecr delete-repository|ecs delete-cluster|efs delete-file-system|kms schedule-key-deletion|route53 delete-hosted-zone|backup delete-backup-vault|logs delete-log-group|organizations \\S+|iam delete-\\S+|secretsmanager delete-secret)( |$)"
+    },
+    {
+      "id": "cloud.destroy",
+      "re": "^(az group delete|az (sql|cosmosdb|storage account|aks|vm) delete|gcloud projects delete|gcloud (sql instances|container clusters|compute instances|storage buckets) delete|gsutil (.* )?rm -r|gsutil rb)( |$)"
+    },
+    {
+      "id": "cloud.destroy",
+      "re": "^kubectl (.* )?delete (namespace|namespaces|ns|pv|pvc|persistentvolume|persistentvolumeclaim|crd|customresourcedefinition|node|nodes)( |/|$)"
+    },
+    {
+      "id": "sys.power",
+      "re": "^(shutdown|reboot|halt|poweroff|stop-computer|restart-computer|logoff|suspend)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.power",
+      "re": "^(init|telinit) [06]( |$)"
+    },
+    {
+      "id": "sys.power",
+      "re": "^(systemctl|loginctl) (reboot|poweroff|halt|suspend|hibernate|hybrid-sleep|kexec|rescue|emergency|kill-session|terminate-session|kill-user|terminate-user)( |$)"
+    },
+    {
+      "id": "sys.power",
+      "re": "^wsl( .*)? (--shutdown|--terminate|-t|--unregister)( |$)"
+    },
+    {
+      "id": "sys.disk",
+      "re": "^(format|diskpart|fdisk|sfdisk|gdisk|cfdisk|sgdisk|parted|wipefs|mkfs(\\.\\S+)?|mke2fs|mkswap|mkntfs|newfs\\S*|format-volume|clear-disk|initialize-disk|remove-partition|new-partition|resize-partition|set-partition|set-disk|reset-physicaldisk|blkdiscard|hdparm)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.disk",
+      "re": "^(zpool (destroy|labelclear)|zfs destroy|lvremove|vgremove|pvremove|cryptsetup (luksformat|erase))( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.disk",
+      "re": "^diskutil (erase\\S*|partition\\S*|zerodisk|randomdisk|secureerase|reformat|apfs (delete\\S*|erase\\S*))( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.disk",
+      "re": "^dd( .*)? of=(/dev/(sd|hd|nvme|disk|rdisk|mmcblk|vd|xvd|dm-|md)|//\\./|\\\\\\\\\\.\\\\)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.disk",
+      "re": "^(cipher( .*)? /w|vssadmin( .*)? delete|wbadmin( .*)? delete|bcdedit)( |:|$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^(set-mppreference|add-mppreference|remove-mppreference|set-netfirewallprofile|disable-netfirewallrule)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^netsh (advfirewall|firewall)( .*)? (set|delete|add)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^reg (add|delete|import|restore|load|unload) \"?(hklm|hkey_local_machine|hkcr|hkey_classes_root|hku|hkey_users)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^(csrutil( .*)? disable|spctl( .*)? --(master|global)-disable|setenforce 0|ufw disable)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^schtasks( .*)? /(create|change|delete)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^(register-scheduledtask|unregister-scheduledtask|set-scheduledtask|new-service|remove-service|setx)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^crontab(?!( -u \\S+)? -l( |$))( |$)"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^(useradd|userdel|usermod|adduser|deluser|passwd|chpasswd|visudo|new-localuser|remove-localuser|set-localuser|add-localgroupmember)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "sys.settings",
+      "re": "^net (user|localgroup)( .*)? /(add|delete)( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "self.session",
+      "re": "^claude( .*)? (--dangerously-skip-permissions|--allow-dangerously-skip-permissions|--permission-mode[ =]bypasspermissions|--settings|--setting-sources|--plugin-dir|--bare|--mcp-config)( |=|$)",
+      "flags": "i"
+    },
+    {
+      "id": "self.session",
+      "re": "^claude (config (set|add|remove)|mcp (add|add-json|add-from-claude-desktop|remove|reset-project-choices)|plugins? (install|uninstall|enable|disable|update|marketplace|add))( |$)",
+      "flags": "i"
+    },
+    {
+      "id": "self.session",
+      "re": "^hades run( |$)",
+      "when": "agent"
+    },
+    {
+      "id": "self.protect",
+      "re": "^hades (install|uninstall)( |$)"
+    }
+  ],
+  "rawRules": [
+    {
+      "id": "self.env",
+      "re": "HADES_(GUARD[A-Z_]*|CONFIG_FILE)['\"]?\\s*[=,]",
+      "flags": "i"
+    },
+    {
+      "id": "self.env",
+      "re": "(setx|set-item|si|new-item|ni)\\s+(-path\\s+)?['\"]?(env:[\\\\/]?)?HADES_(GUARD|CONFIG_FILE)",
+      "flags": "i"
+    },
+    {
+      "id": "self.session",
+      "re": "CLAUDE_CONFIG_DIR['\"]?\\s*[=,]",
+      "flags": "i"
+    },
+    {
+      "id": "self.session",
+      "re": "(setx|set-item|si|new-item|ni|set)\\s+(-path\\s+)?['\"]?(env:[\\\\/]?)?CLAUDE_CONFIG_DIR",
+      "flags": "i"
+    },
+    {
+      "id": "git.config",
+      "re": "GIT_CONFIG_(PARAMETERS|COUNT|KEY_\\d+|VALUE_\\d+|GLOBAL|SYSTEM)['\"]?\\s*[=,]",
+      "flags": "i"
+    },
+    {
+      "id": "git.config",
+      "re": "(setx|set-item|si|new-item|ni|set)\\s+(-path\\s+)?['\"]?(env:[\\\\/]?)?GIT_CONFIG_",
+      "flags": "i"
+    },
+    {
+      "id": "sys.forkbomb",
+      "re": ":\\(\\)\\s*\\{\\s*:\\s*\\|\\s*:\\s*&\\s*\\}\\s*;\\s*:"
+    },
+    {
+      "id": "secrets.env-dump",
+      "re": "\\[(system\\.)?environment\\]::getenvironmentvariables\\(",
+      "flags": "i",
+      "scope": "code"
+    },
+    {
+      "id": "secrets.env-print",
+      "re": "getenvironmentvariable\\(\\s*['\"]?[A-Za-z0-9_]*(secret|token|passw|api_?key|private_?key|access_?key|credential)",
+      "flags": "i",
+      "scope": "code"
+    },
+    {
+      "id": "secrets.env-dump",
+      "re": "(console\\.(log|dir|table|error)|json\\.stringify|util\\.inspect|pprint|print|puts|var_dump|print_r)\\s*\\(?\\s*(process\\.env|os\\.environ|dict\\(os\\.environ\\)|\\$_env|getenv\\(\\))\\s*[),]",
+      "flags": "i",
+      "scope": "code"
+    }
+  ]
+}

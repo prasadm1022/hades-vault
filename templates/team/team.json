@@ -1,0 +1,38 @@
+{
+  "team": "{{TEAM}}",
+  "projects": [
+    {
+      "path": ".",
+      "stack": [],
+      "commands": {
+        "install": "",
+        "build": "",
+        "lint": "",
+        "types": "",
+        "test": "",
+        "run": "",
+        "format": ""
+      }
+    }
+  ],
+  "environments": {
+    "test": {
+      "url": "",
+      "deploy": "",
+      "health": "",
+      "rollback": "",
+      "via_push": false,
+      "notes": ""
+    },
+    "live": {
+      "url": "",
+      "deploy": "",
+      "health": "",
+      "rollback": "",
+      "via_push": false,
+      "notes": ""
+    }
+  },
+  "branch_strategy": "current-branch",
+  "security": { "semgrep_config": "p/default", "dast_live": "baseline", "dast_test": "full" }
+}

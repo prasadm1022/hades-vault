@@ -1,0 +1,6 @@
+{
+  "name": "acme-bun",
+  "devDependencies": {
+    "prettier": "3.3.0"
+  }
+}

@@ -1,0 +1,19 @@
+..F
+
+Failures:
+
+  1) Calculator adds
+     Failure/Error: expect(calc.add(1, 2)).to eq(4)
+
+       expected: 4
+            got: 3
+
+       (compared using ==)
+     # ./spec/calc_spec.rb:5:in `block (2 levels) in <top (required)>'
+
+Finished in 0.01 seconds (files took 0.1 seconds to load)
+3 examples, 1 failure
+
+Failed examples:
+
+rspec ./spec/calc_spec.rb:4 # Calculator adds

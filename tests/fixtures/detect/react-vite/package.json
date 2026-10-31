@@ -1,0 +1,13 @@
+{
+  "name": "portal-ui",
+  "scripts": {
+    "dev": "vite"
+  },
+  "dependencies": {
+    "react": "18.3.1"
+  },
+  "devDependencies": {
+    "vite": "5.4.0",
+    "typescript": "5.6.0"
+  }
+}

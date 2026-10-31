@@ -1,0 +1,13 @@
+{
+  "name": "admin",
+  "scripts": {
+    "build": "ng build",
+    "test": "ng test"
+  },
+  "dependencies": {
+    "@angular/core": "18.2.0"
+  },
+  "devDependencies": {
+    "karma": "6.4.0"
+  }
+}

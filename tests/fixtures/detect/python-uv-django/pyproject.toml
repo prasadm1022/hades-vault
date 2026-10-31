@@ -1,0 +1,4 @@
+[project]
+name = "portal"
+version = "0.1.0"
+dependencies = ["django>=5.1"]

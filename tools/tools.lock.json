@@ -1,0 +1,97 @@
+{
+  "$comment": "Pinned third-party tools. Source lives in tools/<name> as a shallow git submodule at the commit below. Policy: pin the newest stable release that is at least 14 days old (supply-chain cooldown). Update with: node bin/hades.mjs tools bump <name> <tag>",
+  "policy": { "cooldown_days": 14, "pinned_on": "2026-10-31" },
+  "tools": {
+    "rea": {
+      "repo": "https://github.com/morluto/rea",
+      "tag": "rea-agents-6.5.0",
+      "commit": "3b79af28e80785afce9f5998d8f03289402a1847",
+      "released": "2026-10-14",
+      "license": "MIT",
+      "license_files": ["LICENSE", "licenses/"],
+      "role": "Reverse engineering of built artefacts and binaries (cybersecurity engineer, software architect)"
+    },
+    "serena": {
+      "repo": "https://github.com/oraios/serena",
+      "tag": "v2.0.0",
+      "commit": "4c4268f9c0adf8743a75e6dda2ef1fa635f34cc3",
+      "released": "2026-10-13",
+      "license": "GPL-3.0-or-later (Serena application) AND MIT (SolidLSP)",
+      "license_files": ["LICENSE", "LICENSES/"],
+      "role": "Symbol-level code navigation and editing over MCP (all engineering roles)"
+    },
+    "ccusage": {
+      "repo": "https://github.com/ryoppippi/ccusage",
+      "tag": "v20.0.34",
+      "commit": "d7555844929ad76ec97a113d1d51c31de92bee35",
+      "released": "2026-10-15",
+      "license": "MIT",
+      "license_files": ["apps/ccusage/LICENSE"],
+      "role": "Token and cost reporting from Claude Code session logs (project manager)"
+    },
+    "semgrep": {
+      "repo": "https://github.com/semgrep/semgrep",
+      "tag": "v1.181.0",
+      "commit": "72d3525fe7e02f486428386078f192f8c4756804",
+      "released": "2026-10-14",
+      "license": "LGPL-2.1",
+      "license_files": ["LICENSE", "COPYRIGHT"],
+      "role": "Static application security testing (cybersecurity engineer, pre-deploy gate)"
+    },
+    "gitleaks": {
+      "repo": "https://github.com/gitleaks/gitleaks",
+      "tag": "v8.30.1",
+      "commit": "83d9cd684c87d95d656c1458ef04895a7f1cbd8e",
+      "released": "2026-03-21",
+      "license": "MIT",
+      "license_files": ["LICENSE"],
+      "role": "Secret scanning (cybersecurity engineer, pre-commit and pre-deploy gates)"
+    },
+    "trivy": {
+      "repo": "https://github.com/aquasecurity/trivy",
+      "tag": "v0.76.0",
+      "commit": "531360e5d2a88e732373f1614ba99a38738538b8",
+      "released": "2026-10-14",
+      "license": "Apache-2.0",
+      "license_files": ["LICENSE", "NOTICE"],
+      "role": "Dependency, IaC, container and SBOM scanning (cybersecurity engineer, devops engineer)"
+    },
+    "playwright-mcp": {
+      "repo": "https://github.com/microsoft/playwright-mcp",
+      "tag": "v0.0.83",
+      "commit": "f183dad4a52965583e3cc1d59b88cdc279e2e57d",
+      "released": "2026-09-28",
+      "license": "Apache-2.0",
+      "license_files": ["LICENSE"],
+      "role": "Browser automation over MCP (QA engineer, frontend engineer)"
+    },
+    "zaproxy": {
+      "repo": "https://github.com/zaproxy/zaproxy",
+      "tag": "v2.17.0",
+      "commit": "8a1bff313f4d183dba5aa154ecbe89ad751c9153",
+      "released": "2025-12-15",
+      "license": "Apache-2.0",
+      "license_files": ["LICENSE", "LEGALNOTICE.md"],
+      "role": "Dynamic application security testing of deployed systems (cybersecurity engineer)"
+    },
+    "aws-agent-toolkit": {
+      "repo": "https://github.com/aws/agent-toolkit-for-aws",
+      "tag": null,
+      "commit": "44ba1a5451913998815111cc2d518f5c45f95ef7",
+      "released": "2026-10-16",
+      "license": "Apache-2.0",
+      "license_files": ["LICENSE", "NOTICE"],
+      "note": "The repository publishes no release tags; pinned to the newest main commit older than the cooldown.",
+      "role": "Official AWS skills, rules and plugin definitions (devops engineer; software architect and cybersecurity engineer on demand)"
+    },
+    "mcp-proxy-for-aws": {
+      "repo": "https://github.com/aws/mcp-proxy-for-aws",
+      "tag": "v1.7.0",
+      "commit": "22f1b3f8b7c4ef37112114b4af3d6c5a6c0a83bb",
+      "released": "2026-09-15",
+      "license": "Apache-2.0",
+      "license_files": ["LICENSE", "NOTICE"],
+      "role": "Local SigV4 proxy that connects the AWS MCP server to Claude Code with a named AWS profile (devops engineer)"
+    }
+  }
+}

@@ -1,0 +1,930 @@
+[
+  {
+    "id": "node",
+    "ecosystem": "javascript-typescript",
+    "priority": 10,
+    "markers": ["package.json"],
+    "workspace": { "when": { "any": [ { "json": "package.json", "key": "workspaces" }, { "exists": ["pnpm-workspace.yaml", "lerna.json", "nx.json", "rush.json"] } ] } },
+    "variants": [
+      { "pm": "pnpm", "inherit": true,
+        "when": { "any": [ { "exists": "pnpm-lock.yaml" }, { "json": "package.json", "key": "packageManager", "regex": "^pnpm@" } ] },
+        "vars": { "run": "pnpm run", "npx": "pnpm exec", "argsep": "" },
+        "commands": { "install": "pnpm install --frozen-lockfile" } },
+      { "pm": "bun", "inherit": true,
+        "when": { "any": [ { "exists": ["bun.lock", "bun.lockb"] }, { "json": "package.json", "key": "packageManager", "regex": "^bun@" } ] },
+        "vars": { "run": "bun run", "npx": "bunx", "argsep": "" },
+        "commands": { "install": "bun install --frozen-lockfile" } },
+      { "pm": "yarn", "inherit": true,
+        "when": { "any": [ { "all": [ { "exists": "yarn.lock" }, { "exists": ".yarnrc.yml" } ] }, { "json": "package.json", "key": "packageManager", "regex": "^yarn@([2-9]|\\d\\d)" } ] },
+        "vars": { "run": "yarn run", "npx": "yarn", "argsep": "" },
+        "commands": { "install": "yarn install --immutable" } },
+      { "pm": "yarn", "inherit": true,
+        "when": { "any": [ { "exists": "yarn.lock" }, { "json": "package.json", "key": "packageManager", "regex": "^yarn@" } ] },
+        "vars": { "run": "yarn run", "npx": "yarn", "argsep": "" },
+        "commands": { "install": "yarn install --frozen-lockfile" } },
+      { "pm": "npm", "inherit": true,
+        "when": { "exists": ["package-lock.json", "npm-shrinkwrap.json"] },
+        "vars": { "run": "npm run", "npx": "npx", "argsep": "-- " },
+        "commands": { "install": "npm ci" } },
+      { "pm": "npm",
+        "vars": { "run": "npm run", "npx": "npx", "argsep": "-- " },
+        "commands": { "install": "npm install" } }
+    ],
+    "commands": {
+      "build": [ { "when": { "script": "build" }, "cmd": "{run} build" } ],
+      "lint": [
+        { "when": { "script": ["lint", "lint:check", "eslint"] }, "cmd": "{run} {script}" },
+        { "when": { "any": [ { "exists": ["eslint.config.{js,mjs,cjs,ts,mts,cts}", ".eslintrc{,.js,.cjs,.json,.yml,.yaml}"] }, { "json": "package.json", "key": "eslintConfig" } ] }, "cmd": "{npx} eslint ." },
+        { "when": { "exists": "biome.json{,c}" }, "cmd": "{npx} biome lint ." }
+      ],
+      "types": [ { "when": { "script": ["typecheck", "type-check", "check-types", "types", "tsc"] }, "cmd": "{run} {script}" } ],
+      "test": [
+        { "when": { "script": "test" }, "cmd": "{run} test" },
+        { "when": { "dep": "vitest" }, "cmd": "{npx} vitest run" },
+        { "when": { "dep": "jest" }, "cmd": "{npx} jest --ci" }
+      ],
+      "run": [ { "when": { "script": ["dev", "start", "serve"] }, "cmd": "{run} {script}" } ],
+      "format": [
+        { "when": { "script": ["format:check", "fmt:check", "prettier:check", "check-format", "format-check", "check:format"] }, "cmd": "{run} {script}" },
+        { "when": { "any": [ { "exists": [".prettierrc{,.json,.json5,.yml,.yaml,.toml,.js,.cjs,.mjs,.ts}", "prettier.config.{js,cjs,mjs,ts}"] }, { "json": "package.json", "key": "prettier" }, { "dep": "prettier" } ] }, "cmd": "{npx} prettier --check ." },
+        { "when": { "exists": "biome.json{,c}" }, "cmd": "{npx} biome format ." }
+      ]
+    }
+  },
+  {
+    "id": "typescript",
+    "ecosystem": "javascript-typescript",
+    "priority": 15,
+    "requires": ["node"],
+    "markers": ["tsconfig.json"],
+    "commands": {
+      "types": [ { "when": { "exists": "tsconfig.app.json" }, "cmd": "{npx} tsc --noEmit -p tsconfig.app.json" }, "{npx} tsc --noEmit" ]
+    }
+  },
+  {
+    "id": "react",
+    "ecosystem": "javascript-typescript",
+    "priority": 18,
+    "requires": ["node"],
+    "content": [ { "dep": "react" } ]
+  },
+  {
+    "id": "vite",
+    "ecosystem": "javascript-typescript",
+    "priority": 20,
+    "requires": ["node"],
+    "content": [ { "dep": "vite" }, { "not": { "dep": ["react", "vue", "svelte", "@sveltejs/kit", "nuxt", "astro", "solid-js", "preact"] } } ],
+    "commands": { "build": "{npx} vite build", "run": "{npx} vite" }
+  },
+  {
+    "id": "react-vite",
+    "ecosystem": "javascript-typescript",
+    "priority": 25,
+    "requires": ["node"],
+    "content": [ { "dep": "react" }, { "dep": "vite" } ],
+    "commands": { "build": "{npx} vite build", "run": "{npx} vite" }
+  },
+  {
+    "id": "create-react-app",
+    "ecosystem": "javascript-typescript",
+    "priority": 25,
+    "requires": ["node"],
+    "content": [ { "dep": "react-scripts" } ],
+    "commands": {
+      "build": "{npx} react-scripts build",
+      "test": [ { "when": { "script": "test" }, "cmd": "{run} test {argsep}--watchAll=false" }, "{npx} react-scripts test --watchAll=false" ],
+      "run": "{npx} react-scripts start"
+    }
+  },
+  {
+    "id": "next",
+    "ecosystem": "javascript-typescript",
+    "priority": 30,
+    "requires": ["node"],
+    "content": [ { "dep": "next" } ],
+    "commands": { "build": "{npx} next build", "run": "{npx} next dev" }
+  },
+  {
+    "id": "vue",
+    "ecosystem": "javascript-typescript",
+    "priority": 22,
+    "requires": ["node"],
+    "content": [ { "dep": "vue" } ],
+    "commands": {
+      "build": [ { "when": { "dep": "vite" }, "cmd": "{npx} vite build" } ],
+      "types": [ { "when": { "dep": "vue-tsc" }, "cmd": "{npx} vue-tsc --noEmit" } ],
+      "run": [ { "when": { "dep": "vite" }, "cmd": "{npx} vite" } ]
+    }
+  },
+  {
+    "id": "nuxt",
+    "ecosystem": "javascript-typescript",
+    "priority": 30,
+    "requires": ["node"],
+    "content": [ { "dep": "nuxt" } ],
+    "commands": { "build": "{npx} nuxi build", "types": "{npx} nuxi typecheck", "run": "{npx} nuxi dev" }
+  },
+  {
+    "id": "angular",
+    "ecosystem": "javascript-typescript",
+    "priority": 30,
+    "requires": ["node"],
+    "markers": ["angular.json"],
+    "commands": {
+      "build": "{npx} ng build",
+      "test": [
+        { "when": { "script": "test", "dep": "karma" }, "cmd": "{run} test {argsep}--watch=false --browsers=ChromeHeadless" },
+        { "when": { "script": "test" }, "cmd": "{run} test {argsep}--watch=false" },
+        { "when": { "dep": "karma" }, "cmd": "{npx} ng test --watch=false --browsers=ChromeHeadless" },
+        "{npx} ng test --watch=false"
+      ],
+      "run": "{npx} ng serve"
+    }
+  },
+  {
+    "id": "svelte",
+    "ecosystem": "javascript-typescript",
+    "priority": 22,
+    "requires": ["node"],
+    "content": [ { "dep": "svelte" } ],
+    "commands": {
+      "build": [ { "when": { "dep": "vite" }, "cmd": "{npx} vite build" } ],
+      "types": [ { "when": { "script": "check" }, "cmd": "{run} check" }, { "when": { "dep": "svelte-check" }, "cmd": "{npx} svelte-check" } ],
+      "run": [ { "when": { "dep": "vite" }, "cmd": "{npx} vite dev" } ]
+    }
+  },
+  {
+    "id": "sveltekit",
+    "ecosystem": "javascript-typescript",
+    "priority": 30,
+    "requires": ["node"],
+    "content": [ { "dep": "@sveltejs/kit" } ],
+    "commands": {
+      "build": "{npx} vite build",
+      "types": [ { "when": { "script": "check" }, "cmd": "{run} check" }, "{npx} svelte-kit sync && {npx} svelte-check" ],
+      "run": "{npx} vite dev"
+    }
+  },
+  {
+    "id": "nest",
+    "ecosystem": "javascript-typescript",
+    "priority": 28,
+    "requires": ["node"],
+    "content": [ { "dep": "@nestjs/core" } ],
+    "commands": {
+      "build": "{npx} nest build",
+      "run": [ { "when": { "script": "start:dev" }, "cmd": "{run} start:dev" }, "{npx} nest start --watch" ]
+    }
+  },
+  {
+    "id": "express",
+    "ecosystem": "javascript-typescript",
+    "priority": 20,
+    "requires": ["node"],
+    "content": [ { "dep": "express" } ],
+    "commands": { "run": [ { "when": { "exists": ["server.js", "app.js", "index.js", "src/server.js", "src/index.js"] }, "cmd": "node {match}" } ] }
+  },
+  {
+    "id": "astro",
+    "ecosystem": "javascript-typescript",
+    "priority": 30,
+    "requires": ["node"],
+    "content": [ { "dep": "astro" } ],
+    "commands": {
+      "build": "{npx} astro build",
+      "types": [ { "when": { "dep": "@astrojs/check" }, "cmd": "{npx} astro check" } ],
+      "run": "{npx} astro dev"
+    }
+  },
+  {
+    "id": "deno",
+    "ecosystem": "javascript-typescript",
+    "priority": 12,
+    "markers": [["deno.json", "deno.jsonc"]],
+    "commands": {
+      "install": "deno install",
+      "build": [ { "when": { "denoTask": "build" }, "cmd": "deno task build" } ],
+      "lint": [ { "when": { "denoTask": "lint" }, "cmd": "deno task lint" }, "deno lint" ],
+      "types": [ { "when": { "denoTask": ["check", "typecheck"] }, "cmd": "deno task {script}" }, { "when": { "exists": ["main.ts", "mod.ts"] }, "cmd": "deno check {match}" }, "deno check ." ],
+      "test": [ { "when": { "denoTask": "test" }, "cmd": "deno task test" }, { "when": { "exists": ["*{_,.}test.{ts,tsx,js,mjs}", "tests/", "test/"] }, "cmd": "deno test" } ],
+      "run": [ { "when": { "denoTask": ["dev", "start"] }, "cmd": "deno task {script}" }, { "when": { "exists": ["main.ts", "main.js"] }, "cmd": "deno run -A {match}" } ],
+      "format": [ { "when": { "denoTask": ["fmt:check", "format:check"] }, "cmd": "deno task {script}" }, "deno fmt --check" ]
+    }
+  },
+  {
+    "id": "python",
+    "ecosystem": "python",
+    "priority": 10,
+    "markers": [["pyproject.toml", "requirements*.txt", "requirements/", "setup.py", "setup.cfg", "Pipfile", "environment.y{a,}ml"]],
+    "workspace": { "when": { "file": "pyproject.toml", "has": "[tool.uv.workspace]" } },
+    "variants": [
+      { "pm": "uv", "inherit": true,
+        "when": { "any": [ { "exists": "uv.lock" }, { "file": "pyproject.toml", "has": "[tool.uv" } ] },
+        "vars": { "py": "uv run python", "pyx": "uv run" },
+        "commands": { "install": [ { "when": { "exists": "uv.lock" }, "cmd": "uv sync --locked" }, "uv sync" ] } },
+      { "pm": "poetry",
+        "when": { "any": [ { "exists": "poetry.lock" }, { "file": "pyproject.toml", "has": "[tool.poetry" } ] },
+        "vars": { "py": "poetry run python", "pyx": "poetry run" },
+        "commands": { "install": "poetry install --no-interaction" } },
+      { "pm": "pdm",
+        "when": { "any": [ { "exists": "pdm.lock" }, { "file": "pyproject.toml", "has": "[tool.pdm" } ] },
+        "vars": { "py": "pdm run python", "pyx": "pdm run" },
+        "commands": { "install": "pdm install" } },
+      { "pm": "pipenv",
+        "when": { "exists": ["Pipfile", "Pipfile.lock"] },
+        "vars": { "py": "pipenv run python", "pyx": "pipenv run" },
+        "commands": { "install": [ { "when": { "exists": "Pipfile.lock" }, "cmd": "pipenv sync --dev" }, "pipenv install --dev" ] } },
+      { "pm": "conda",
+        "when": { "exists": "environment.y{a,}ml", "not": { "exists": ["pyproject.toml", "requirements.txt"] } },
+        "vars": { "py": "python", "pyx": "python -m" },
+        "commands": { "install": [ { "when": { "exists": "environment.y{a,}ml" }, "cmd": "conda env update --file {match} --prune" } ] },
+        "note": "conda: commands assume the environment is active" },
+      { "pm": "pip",
+        "vars": { "py": "{python}", "pyx": "{python} -m" },
+        "commands": { "install": [
+          { "when": { "all": [ { "exists": "requirements.txt" }, { "exists": "requirements-dev.txt" } ] }, "cmd": "{python} -m pip install -r requirements.txt -r requirements-dev.txt" },
+          { "when": { "exists": "requirements.txt" }, "cmd": "{python} -m pip install -r requirements.txt" },
+          { "when": { "exists": ["pyproject.toml", "setup.py"] }, "cmd": "{python} -m pip install -e ." }
+        ] },
+        "note": "pip: run inside a virtualenv (python -m venv .venv)" }
+    ],
+    "commands": {
+      "lint": [
+        { "when": { "any": [ { "exists": ["ruff.toml", ".ruff.toml"] }, { "file": "pyproject.toml", "has": "[tool.ruff" }, { "pydep": "ruff" } ] }, "cmd": "{pyx} ruff check ." },
+        { "when": { "any": [ { "exists": ".flake8" }, { "file": ["setup.cfg", "tox.ini"], "has": "[flake8]" }, { "pydep": "flake8" } ] }, "cmd": "{pyx} flake8" }
+      ],
+      "types": [
+        { "when": { "any": [ { "exists": ["mypy.ini", ".mypy.ini"] }, { "file": "pyproject.toml", "has": "[tool.mypy" }, { "file": "setup.cfg", "has": "[mypy" }, { "pydep": "mypy" } ] }, "cmd": "{pyx} mypy ." },
+        { "when": { "any": [ { "exists": "pyrightconfig.json" }, { "file": "pyproject.toml", "has": "[tool.pyright" }, { "pydep": "pyright" } ] }, "cmd": "{pyx} pyright" }
+      ],
+      "test": [
+        { "when": { "any": [ { "exists": ["pytest.ini", "conftest.py", "tests/conftest.py", "test/conftest.py"] }, { "file": ["pyproject.toml", "setup.cfg", "tox.ini"], "regex": "\\[(tool[:.])?pytest" }, { "pydep": "pytest" } ] }, "cmd": "{pyx} pytest -q" },
+        { "when": { "exists": "tests/" }, "cmd": "{py} -m unittest discover -s tests -t ." },
+        { "when": { "exists": "test/" }, "cmd": "{py} -m unittest discover -s test -t ." }
+      ],
+      "run": [ { "when": { "exists": ["main.py", "app.py"] }, "cmd": "{py} {match}" } ],
+      "format": [
+        { "when": { "any": [ { "file": "pyproject.toml", "has": "[tool.black" }, { "pydep": "black" } ] }, "cmd": "{pyx} black --check ." },
+        { "when": { "any": [ { "exists": ["ruff.toml", ".ruff.toml"] }, { "file": "pyproject.toml", "has": "[tool.ruff" } ] }, "cmd": "{pyx} ruff format --check ." }
+      ]
+    }
+  },
+  {
+    "id": "django",
+    "ecosystem": "python",
+    "priority": 30,
+    "requires": ["python"],
+    "markers": ["manage.py"],
+    "content": [ { "file": "manage.py", "has": "django" } ],
+    "commands": {
+      "build": "{py} manage.py check",
+      "test": [ { "when": { "pydep": "pytest-django" }, "cmd": "{pyx} pytest -q" }, "{py} manage.py test" ],
+      "run": "{py} manage.py runserver"
+    }
+  },
+  {
+    "id": "fastapi",
+    "ecosystem": "python",
+    "priority": 25,
+    "requires": ["python"],
+    "content": [ { "pydep": "fastapi" } ],
+    "commands": {
+      "run": [
+        { "when": { "exists": "main.py" }, "cmd": "{pyx} uvicorn main:app --reload" },
+        { "when": { "exists": "app/main.py" }, "cmd": "{pyx} uvicorn app.main:app --reload" },
+        { "when": { "exists": "src/main.py" }, "cmd": "{pyx} uvicorn src.main:app --reload" }
+      ]
+    }
+  },
+  {
+    "id": "flask",
+    "ecosystem": "python",
+    "priority": 25,
+    "requires": ["python"],
+    "content": [ { "pydep": "flask" } ],
+    "commands": { "run": "{pyx} flask run" }
+  },
+  {
+    "id": "python-data",
+    "ecosystem": "data-ml",
+    "priority": 5,
+    "requires": ["python"],
+    "standalone": false,
+    "content": [ { "pydep": ["pandas", "polars", "pyspark", "duckdb", "apache-airflow", "dagster", "prefect"] } ]
+  },
+  {
+    "id": "python-ml",
+    "ecosystem": "data-ml",
+    "priority": 5,
+    "requires": ["python"],
+    "standalone": false,
+    "content": [ { "pydep": ["torch", "tensorflow", "keras", "jax", "scikit-learn", "xgboost", "lightgbm", "transformers", "langchain", "llama-index", "anthropic", "openai", "mlflow"] } ]
+  },
+  {
+    "id": "jupyter",
+    "ecosystem": "data-ml",
+    "priority": 5,
+    "joins": ["python"],
+    "standalone": false,
+    "markers": [["*.ipynb", "notebooks/*.ipynb"]]
+  },
+  {
+    "id": "dbt",
+    "ecosystem": "data-ml",
+    "priority": 20,
+    "markers": ["dbt_project.yml"],
+    "commands": {
+      "install": "dbt deps",
+      "build": "dbt parse",
+      "lint": [ { "when": { "exists": ".sqlfluff" }, "cmd": "sqlfluff lint" } ],
+      "test": "dbt test",
+      "run": "dbt build"
+    },
+    "note": "dbt: needs a profile (profiles.yml or DBT_PROFILES_DIR); test/run hit the warehouse"
+  },
+  {
+    "id": "dvc",
+    "ecosystem": "data-ml",
+    "priority": 15,
+    "aux": true,
+    "standalone": false,
+    "markers": ["dvc.yaml"],
+    "commands": { "run": "dvc repro" }
+  },
+  {
+    "id": "maven",
+    "ecosystem": "jvm",
+    "priority": 10,
+    "markers": ["pom.xml"],
+    "workspace": { "when": { "file": "pom.xml", "has": "<modules>" } },
+    "variants": [
+      { "pm": "maven-wrapper", "when": { "platform": "win32", "exists": "mvnw.cmd" }, "vars": { "mvn": "mvnw.cmd" } },
+      { "pm": "maven-wrapper", "when": { "not": { "platform": "win32" }, "exists": "mvnw" }, "vars": { "mvn": "./mvnw" } },
+      { "pm": "maven", "vars": { "mvn": "mvn" } }
+    ],
+    "commands": {
+      "build": "{mvn} -B -q -DskipTests package",
+      "lint": [
+        { "when": { "file": "pom.xml", "has": "maven-checkstyle-plugin" }, "cmd": "{mvn} -B -q checkstyle:check" },
+        { "when": { "file": "pom.xml", "has": "maven-pmd-plugin" }, "cmd": "{mvn} -B -q pmd:check" }
+      ],
+      "test": "{mvn} -B -q test",
+      "format": [ { "when": { "file": "pom.xml", "has": "spotless-maven-plugin" }, "cmd": "{mvn} -B -q spotless:check" } ]
+    }
+  },
+  {
+    "id": "gradle",
+    "ecosystem": "jvm",
+    "priority": 10,
+    "markers": [["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"]],
+    "workspace": { "when": { "file": "settings.gradle{,.kts}", "regex": "^\\s*include" } },
+    "variants": [
+      { "pm": "gradle-wrapper", "when": { "platform": "win32", "exists": "gradlew.bat" }, "vars": { "gradle": "gradlew.bat" } },
+      { "pm": "gradle-wrapper", "when": { "not": { "platform": "win32" }, "exists": "gradlew" }, "vars": { "gradle": "./gradlew" } },
+      { "pm": "gradle", "vars": { "gradle": "gradle" } }
+    ],
+    "commands": {
+      "build": "{gradle} assemble --console=plain",
+      "lint": [
+        { "when": { "file": ["{,*/}build.gradle{,.kts}", "gradle/libs.versions.toml"], "regex": "io\\.gitlab\\.arturbosch\\.detekt|dev\\.detekt" }, "cmd": "{gradle} detekt --console=plain" },
+        { "when": { "file": ["{,*/}build.gradle{,.kts}", "gradle/libs.versions.toml"], "has": "org.jlleitschuh.gradle.ktlint" }, "cmd": "{gradle} ktlintCheck --console=plain" },
+        { "when": { "file": "{,*/}build.gradle{,.kts}", "regex": "['\"]checkstyle['\"]|^\\s*checkstyle\\s*$" }, "cmd": "{gradle} checkstyleMain --console=plain" },
+        { "when": { "file": "{,*/}build.gradle{,.kts}", "regex": "['\"]pmd['\"]|^\\s*pmd\\s*$" }, "cmd": "{gradle} pmdMain --console=plain" }
+      ],
+      "test": "{gradle} test --console=plain",
+      "run": [ { "when": { "file": "{,*/}build.gradle{,.kts}", "regex": "['\"]application['\"]|^\\s*application\\s*(\\{.*)?$" }, "cmd": "{gradle} run --console=plain" } ],
+      "format": [ { "when": { "file": ["{,*/}build.gradle{,.kts}", "gradle/libs.versions.toml"], "has": "com.diffplug.spotless" }, "cmd": "{gradle} spotlessCheck --console=plain" } ]
+    }
+  },
+  {
+    "id": "kotlin",
+    "ecosystem": "jvm",
+    "priority": 15,
+    "requires": ["gradle", "maven"],
+    "content": [ { "file": ["{,*/}build.gradle{,.kts}", "gradle/libs.versions.toml", "pom.xml"], "regex": "org\\.jetbrains\\.kotlin|kotlin\\(\"|kotlin-maven-plugin" } ]
+  },
+  {
+    "id": "spring-boot",
+    "ecosystem": "jvm",
+    "priority": 25,
+    "requires": ["maven", "gradle"],
+    "content": [ { "file": ["pom.xml", "{,*/}build.gradle{,.kts}", "gradle/libs.versions.toml"], "has": "spring-boot" } ],
+    "commands": {
+      "run": [ { "when": { "stack": "maven" }, "cmd": "{mvn} spring-boot:run" }, { "when": { "stack": "gradle" }, "cmd": "{gradle} bootRun --console=plain" } ]
+    }
+  },
+  {
+    "id": "scala-sbt",
+    "ecosystem": "jvm",
+    "priority": 10,
+    "markers": ["build.sbt"],
+    "commands": {
+      "install": "sbt -batch update",
+      "build": "sbt -batch compile",
+      "test": "sbt -batch test",
+      "run": "sbt -batch run",
+      "format": [ { "when": { "exists": ".scalafmt.conf" }, "cmd": "sbt -batch scalafmtCheckAll" } ]
+    }
+  },
+  {
+    "id": "go",
+    "ecosystem": "go",
+    "priority": 10,
+    "markers": ["go.mod"],
+    "workspace": { "when": { "exists": "go.work" } },
+    "commands": {
+      "install": "go mod download",
+      "build": "go build ./...",
+      "lint": [ { "when": { "exists": ".golangci.{yml,yaml,toml,json}" }, "cmd": "golangci-lint run" }, "go vet ./..." ],
+      "test": "go test ./...",
+      "run": [ { "when": { "exists": "main.go" }, "cmd": "go run ." } ],
+      "format": "gofmt -l ."
+    },
+    "note": "go: gofmt -l lists unformatted files and always exits 0"
+  },
+  {
+    "id": "rust",
+    "ecosystem": "rust",
+    "priority": 10,
+    "markers": ["Cargo.toml"],
+    "workspace": { "when": { "file": "Cargo.toml", "has": "[workspace]" } },
+    "commands": {
+      "install": "cargo fetch",
+      "build": "cargo build",
+      "lint": "cargo clippy --all-targets -- -D warnings",
+      "test": "cargo test",
+      "run": [ { "when": { "any": [ { "exists": "src/main.rs" }, { "file": "Cargo.toml", "has": "[[bin]]" } ] }, "cmd": "cargo run" } ],
+      "format": "cargo fmt --all -- --check"
+    }
+  },
+  {
+    "id": "dotnet",
+    "ecosystem": "dotnet",
+    "priority": 10,
+    "markers": [["*.sln", "*.slnx", "*.csproj", "*.fsproj", "*.vbproj"]],
+    "workspace": { "when": { "exists": "*.sln{,x}" } },
+    "commands": {
+      "install": [ { "when": { "exists": "*.sln{,x}" }, "cmd": "dotnet restore {match}" }, { "when": { "exists": "*.{cs,fs,vb}proj" }, "cmd": "dotnet restore {match}" } ],
+      "build": [ { "when": { "exists": "*.sln{,x}" }, "cmd": "dotnet build {match} --nologo" }, { "when": { "exists": "*.{cs,fs,vb}proj" }, "cmd": "dotnet build {match} --nologo" } ],
+      "test": [ { "when": { "exists": "*.sln{,x}" }, "cmd": "dotnet test {match} --nologo" }, { "when": { "exists": "*.{cs,fs,vb}proj" }, "cmd": "dotnet test {match} --nologo" } ],
+      "run": [ { "when": { "exists": "*.{cs,fs,vb}proj" }, "cmd": "dotnet run --project {match}" } ],
+      "format": [ { "when": { "exists": "*.sln{,x}" }, "cmd": "dotnet format {match} --verify-no-changes" }, { "when": { "exists": "*.{cs,fs,vb}proj" }, "cmd": "dotnet format {match} --verify-no-changes" } ]
+    }
+  },
+  {
+    "id": "aspnet-core",
+    "ecosystem": "dotnet",
+    "priority": 20,
+    "requires": ["dotnet"],
+    "content": [ { "file": ["*.csproj", "*/*.csproj", "src/*/*.csproj"], "has": "Microsoft.NET.Sdk.Web" } ],
+    "commands": {
+      "run": [ { "when": { "file": ["*.csproj", "*/*.csproj", "src/*/*.csproj"], "has": "Microsoft.NET.Sdk.Web" }, "cmd": "dotnet run --project {match}" } ]
+    }
+  },
+  {
+    "id": "php",
+    "ecosystem": "php",
+    "priority": 10,
+    "markers": ["composer.json"],
+    "commands": {
+      "install": "composer install --no-interaction --prefer-dist",
+      "lint": [
+        { "when": { "composerScript": ["lint", "cs"] }, "cmd": "composer run-script {script}" },
+        { "when": { "exists": ["{,.}phpcs.xml{,.dist}"] }, "cmd": "php vendor/bin/phpcs" }
+      ],
+      "types": [
+        { "when": { "composerScript": ["analyse", "analyze", "phpstan", "stan", "psalm"] }, "cmd": "composer run-script {script}" },
+        { "when": { "exists": ["phpstan.neon{,.dist}", "phpstan.dist.neon"] }, "cmd": "php vendor/bin/phpstan analyse --no-progress" },
+        { "when": { "exists": "psalm.xml{,.dist}" }, "cmd": "php vendor/bin/psalm --no-progress" }
+      ],
+      "test": [
+        { "when": { "composerScript": "test" }, "cmd": "composer run-script test" },
+        { "when": { "composerDep": "pestphp/pest" }, "cmd": "php vendor/bin/pest" },
+        { "when": { "exists": "phpunit.xml{,.dist}" }, "cmd": "php vendor/bin/phpunit" }
+      ],
+      "format": [
+        { "when": { "exists": ".php-cs-fixer{,.dist}.php" }, "cmd": "php vendor/bin/php-cs-fixer fix --dry-run --diff" },
+        { "when": { "any": [ { "exists": "pint.json" }, { "composerDep": "laravel/pint" } ] }, "cmd": "php vendor/bin/pint --test" }
+      ]
+    }
+  },
+  {
+    "id": "laravel",
+    "ecosystem": "php",
+    "priority": 30,
+    "requires": ["php"],
+    "markers": ["artisan"],
+    "content": [ { "composerDep": "laravel/framework" } ],
+    "commands": { "test": "php artisan test", "run": "php artisan serve" }
+  },
+  {
+    "id": "symfony",
+    "ecosystem": "php",
+    "priority": 25,
+    "requires": ["php"],
+    "markers": ["bin/console"],
+    "content": [ { "composerDep": "symfony/framework-bundle" } ],
+    "commands": {
+      "test": [ { "when": { "exists": "bin/phpunit" }, "cmd": "php bin/phpunit" } ],
+      "run": "php -S 127.0.0.1:8000 -t public"
+    }
+  },
+  {
+    "id": "ruby",
+    "ecosystem": "ruby",
+    "priority": 10,
+    "markers": ["Gemfile"],
+    "commands": {
+      "install": "bundle install",
+      "lint": [ { "when": { "exists": ".rubocop.yml" }, "cmd": "bundle exec rubocop" }, { "when": { "gem": "standard" }, "cmd": "bundle exec standardrb" } ],
+      "types": [ { "when": { "exists": "sorbet/" }, "cmd": "bundle exec srb tc" }, { "when": { "exists": "Steepfile" }, "cmd": "bundle exec steep check" } ],
+      "test": [ { "when": { "exists": [".rspec", "spec/"] }, "cmd": "bundle exec rspec" }, { "when": { "exists": "Rakefile", "all": [ { "exists": "test/" } ] }, "cmd": "bundle exec rake test" } ]
+    }
+  },
+  {
+    "id": "rails",
+    "ecosystem": "ruby",
+    "priority": 30,
+    "requires": ["ruby"],
+    "markers": [["bin/rails", "config/application.rb"]],
+    "content": [ { "gem": "rails" } ],
+    "commands": {
+      "test": [ { "when": { "exists": "spec/" }, "cmd": "bundle exec rspec" }, "bundle exec rails test" ],
+      "run": "bundle exec rails server"
+    }
+  },
+  {
+    "id": "react-native",
+    "ecosystem": "mobile",
+    "priority": 28,
+    "requires": ["node"],
+    "content": [ { "dep": "react-native" } ],
+    "workspace": { "when": { "exists": ["android/", "ios/"] }, "covers": ["jvm", "mobile"] },
+    "commands": { "run": "{npx} react-native start" },
+    "note": "react-native: native builds need the Android SDK or Xcode (react-native run-android | run-ios)"
+  },
+  {
+    "id": "expo",
+    "ecosystem": "mobile",
+    "priority": 30,
+    "requires": ["node"],
+    "content": [ { "dep": "expo" } ],
+    "workspace": { "when": { "exists": ["android/", "ios/"] }, "covers": ["jvm", "mobile"] },
+    "commands": { "build": "{npx} expo export", "run": "{npx} expo start" }
+  },
+  {
+    "id": "flutter",
+    "ecosystem": "mobile",
+    "priority": 25,
+    "markers": ["pubspec.yaml"],
+    "content": [ { "file": "pubspec.yaml", "regex": "sdk:\\s*flutter" } ],
+    "workspace": { "when": { "exists": ["android/", "ios/", "macos/", "linux/", "windows/"] }, "covers": ["jvm", "mobile", "cpp-c"] },
+    "commands": {
+      "install": "flutter pub get",
+      "build": [ { "when": { "exists": "web/" }, "cmd": "flutter build web" }, { "when": { "exists": "android/" }, "cmd": "flutter build apk --debug" } ],
+      "lint": "flutter analyze",
+      "test": [ { "when": { "exists": "test/" }, "cmd": "flutter test" } ],
+      "run": "flutter run",
+      "format": "dart format --output=none --set-exit-if-changed ."
+    }
+  },
+  {
+    "id": "dart",
+    "ecosystem": "mobile",
+    "priority": 10,
+    "markers": ["pubspec.yaml"],
+    "content": [ { "not": { "file": "pubspec.yaml", "regex": "sdk:\\s*flutter" } } ],
+    "commands": {
+      "install": "dart pub get",
+      "lint": "dart analyze",
+      "test": [ { "when": { "exists": "test/" }, "cmd": "dart test" } ],
+      "run": [ { "when": { "exists": "bin/" }, "cmd": "dart run" } ],
+      "format": "dart format --output=none --set-exit-if-changed ."
+    }
+  },
+  {
+    "id": "android",
+    "ecosystem": "mobile",
+    "priority": 25,
+    "requires": ["gradle"],
+    "content": [ { "any": [ { "exists": ["src/main/AndroidManifest.xml", "*/src/main/AndroidManifest.xml"] }, { "file": ["{,*/}build.gradle{,.kts}", "gradle/libs.versions.toml"], "regex": "com\\.android\\.(application|library)" } ] } ],
+    "commands": {
+      "build": "{gradle} assembleDebug --console=plain",
+      "lint": "{gradle} lint --console=plain",
+      "test": "{gradle} testDebugUnitTest --console=plain",
+      "run": "{gradle} installDebug --console=plain"
+    }
+  },
+  {
+    "id": "ios-xcode",
+    "ecosystem": "mobile",
+    "priority": 20,
+    "markers": [["*.xcodeproj/", "*.xcworkspace/"]],
+    "commands": {
+      "install": [ { "when": { "exists": "Podfile" }, "cmd": "pod install" } ],
+      "build": [ { "when": { "exists": "*.xcodeproj/", "count": 1, "not": { "exists": "*.xcworkspace/" } }, "cmd": "xcodebuild -quiet build" } ],
+      "lint": [ { "when": { "exists": ".swiftlint.yml" }, "cmd": "swiftlint" } ]
+    },
+    "note": "xcode: macOS only; workspaces and tests need -scheme and -destination"
+  },
+  {
+    "id": "swiftpm",
+    "ecosystem": "mobile",
+    "priority": 15,
+    "markers": ["Package.swift"],
+    "commands": {
+      "install": "swift package resolve",
+      "build": "swift build",
+      "lint": [ { "when": { "exists": ".swiftlint.yml" }, "cmd": "swiftlint" } ],
+      "test": "swift test",
+      "run": "swift run",
+      "format": [ { "when": { "exists": ".swift-format" }, "cmd": "swift format lint --recursive ." } ]
+    }
+  },
+  {
+    "id": "cmake",
+    "ecosystem": "cpp-c",
+    "priority": 10,
+    "markers": ["CMakeLists.txt"],
+    "commands": {
+      "install": [ { "when": { "exists": "conanfile.{txt,py}" }, "cmd": "conan install . --output-folder=build --build=missing" } ],
+      "build": "cmake -S . -B build && cmake --build build",
+      "test": "ctest --test-dir build --output-on-failure"
+    }
+  },
+  {
+    "id": "meson",
+    "ecosystem": "cpp-c",
+    "priority": 10,
+    "markers": ["meson.build"],
+    "commands": { "install": "meson setup build", "build": "meson compile -C build", "test": "meson test -C build" },
+    "note": "meson: run install (meson setup build) once before build"
+  },
+  {
+    "id": "bazel",
+    "ecosystem": "cpp-c",
+    "priority": 15,
+    "markers": [["MODULE.bazel", "WORKSPACE", "WORKSPACE.bazel"]],
+    "commands": { "build": "bazel build //...", "test": "bazel test //..." }
+  },
+  {
+    "id": "make",
+    "ecosystem": "cpp-c",
+    "priority": 5,
+    "aux": true,
+    "standalone": false,
+    "markers": [["Makefile", "makefile", "GNUmakefile"]],
+    "commands": {
+      "install": [ { "when": { "makeTarget": ["deps", "install-deps", "setup", "bootstrap"] }, "cmd": "make {script}" } ],
+      "build": [ { "when": { "makeTarget": "build" }, "cmd": "make build" }, { "when": { "makeTarget": "all" }, "cmd": "make" } ],
+      "lint": [ { "when": { "makeTarget": ["lint", "vet"] }, "cmd": "make {script}" } ],
+      "types": [ { "when": { "makeTarget": ["typecheck", "types", "check-types"] }, "cmd": "make {script}" } ],
+      "test": [ { "when": { "makeTarget": ["test", "check", "tests"] }, "cmd": "make {script}" } ],
+      "run": [ { "when": { "makeTarget": ["run", "dev", "serve", "start"] }, "cmd": "make {script}" } ],
+      "format": [ { "when": { "makeTarget": ["fmt-check", "format-check", "check-format"] }, "cmd": "make {script}" } ]
+    }
+  },
+  {
+    "id": "c-cpp",
+    "ecosystem": "cpp-c",
+    "priority": 1,
+    "fallback": true,
+    "markers": [["*.c", "*.cc", "*.cpp", "*.cxx", "src/*.c", "src/*.cc", "src/*.cpp"]]
+  },
+  {
+    "id": "terraform",
+    "ecosystem": "infra",
+    "priority": 10,
+    "markers": ["*.tf"],
+    "commands": {
+      "install": "terraform init -input=false",
+      "build": "terraform init -backend=false -input=false && terraform validate",
+      "lint": [ { "when": { "exists": ".tflint.hcl" }, "cmd": "tflint" } ],
+      "run": "terraform plan -input=false",
+      "format": "terraform fmt -check -recursive"
+    },
+    "note": "terraform: no test command (terraform test can create real resources)"
+  },
+  {
+    "id": "terragrunt",
+    "ecosystem": "infra",
+    "priority": 15,
+    "markers": [["terragrunt.hcl", "root.hcl"]],
+    "commands": { "run": "terragrunt plan" }
+  },
+  {
+    "id": "helm",
+    "ecosystem": "infra",
+    "priority": 10,
+    "aux": true,
+    "markers": ["Chart.yaml"],
+    "commands": {
+      "install": [ { "when": { "file": "Chart.yaml", "has": "dependencies:" }, "cmd": "helm dependency build" } ],
+      "build": "helm template .",
+      "lint": "helm lint ."
+    }
+  },
+  {
+    "id": "kustomize",
+    "ecosystem": "infra",
+    "priority": 10,
+    "aux": true,
+    "markers": [["kustomization.yaml", "kustomization.yml", "Kustomization"]],
+    "commands": { "build": "kubectl kustomize ." }
+  },
+  {
+    "id": "kubernetes",
+    "ecosystem": "infra",
+    "priority": 5,
+    "aux": true,
+    "content": [ { "file": "*.y{a,}ml", "regex": "^apiVersion:\\s*\\S+" }, { "file": "*.y{a,}ml", "regex": "^kind:\\s*[A-Z]" } ],
+    "note": "kubernetes: validate with kubectl apply --dry-run=server (needs a cluster)"
+  },
+  {
+    "id": "docker-compose",
+    "ecosystem": "infra",
+    "priority": 10,
+    "aux": "solo",
+    "standalone": false,
+    "markers": [["compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml"]],
+    "commands": { "build": "docker compose build", "lint": "docker compose config --quiet", "run": "docker compose up --build" }
+  },
+  {
+    "id": "dockerfile",
+    "ecosystem": "infra",
+    "priority": 5,
+    "aux": "solo",
+    "standalone": false,
+    "markers": [["Dockerfile", "Containerfile", "*.Dockerfile", "Dockerfile.*"]],
+    "commands": {
+      "build": [ { "when": { "exists": "Dockerfile" }, "cmd": "docker build -t {name}:dev ." }, { "when": { "exists": ["Containerfile", "*.Dockerfile", "Dockerfile.*"] }, "cmd": "docker build -t {name}:dev -f {match} ." } ],
+      "lint": [ { "when": { "exists": [".hadolint.y{a,}ml"], "all": [ { "exists": "Dockerfile" } ] }, "cmd": "hadolint Dockerfile" } ],
+      "run": "docker run --rm {name}:dev"
+    }
+  },
+  {
+    "id": "serverless",
+    "ecosystem": "infra",
+    "priority": 15,
+    "aux": true,
+    "joins": ["node", "python"],
+    "markers": [["serverless.yml", "serverless.yaml", "serverless.ts", "serverless.js"]],
+    "commands": {
+      "build": [ { "when": { "stack": "node" }, "cmd": "{npx} serverless package" }, "serverless package" ],
+      "run": [ { "when": { "dep": "serverless-offline" }, "cmd": "{npx} serverless offline" } ]
+    }
+  },
+  {
+    "id": "aws-sam",
+    "ecosystem": "infra",
+    "priority": 20,
+    "markers": [["template.yaml", "template.yml"]],
+    "content": [ { "file": "template.y{a,}ml", "has": "AWS::Serverless" } ],
+    "commands": { "build": "sam build", "lint": "sam validate --lint", "run": "sam local start-api" }
+  },
+  {
+    "id": "aws-cdk",
+    "ecosystem": "infra",
+    "priority": 15,
+    "aux": true,
+    "joins": ["node", "python"],
+    "markers": ["cdk.json"],
+    "commands": { "build": [ { "when": { "stack": "node" }, "cmd": "{npx} cdk synth --quiet" }, "cdk synth --quiet" ] }
+  },
+  {
+    "id": "pulumi",
+    "ecosystem": "infra",
+    "priority": 15,
+    "aux": true,
+    "markers": [["Pulumi.yaml", "Pulumi.yml"]],
+    "commands": { "run": "pulumi preview" }
+  },
+  {
+    "id": "ansible",
+    "ecosystem": "infra",
+    "priority": 10,
+    "content": [ { "any": [ { "exists": "ansible.cfg" }, { "file": ["site.yml", "playbook.yml", "playbooks/*.yml"], "regex": "^\\s*-?\\s*hosts:" } ] } ],
+    "commands": { "lint": "ansible-lint" }
+  },
+  {
+    "id": "static-html",
+    "ecosystem": "web-static",
+    "priority": 1,
+    "fallback": true,
+    "markers": ["index.html"],
+    "commands": { "run": "{python} -m http.server 8000" }
+  },
+  {
+    "id": "hugo",
+    "ecosystem": "web-static",
+    "priority": 20,
+    "content": [ { "any": [ { "exists": "hugo.{toml,yaml,yml,json}" }, { "exists": "config.{toml,yaml,yml}", "all": [ { "exists": ["archetypes/", "themes/", "layouts/"] } ] } ] } ],
+    "commands": { "build": "hugo --minify", "run": "hugo server" }
+  },
+  {
+    "id": "jekyll",
+    "ecosystem": "web-static",
+    "priority": 20,
+    "joins": ["ruby"],
+    "markers": ["_config.yml"],
+    "content": [ { "any": [ { "gem": "jekyll" }, { "exists": ["_posts/", "_layouts/"] } ] } ],
+    "commands": {
+      "install": [ { "when": { "exists": "Gemfile" }, "cmd": "bundle install" } ],
+      "build": [ { "when": { "exists": "Gemfile" }, "cmd": "bundle exec jekyll build" }, "jekyll build" ],
+      "run": [ { "when": { "exists": "Gemfile" }, "cmd": "bundle exec jekyll serve" }, "jekyll serve" ]
+    }
+  },
+  {
+    "id": "prisma",
+    "ecosystem": "databases",
+    "priority": 5,
+    "joins": ["node"],
+    "standalone": false,
+    "markers": [["prisma/schema.prisma", "prisma/schema/", "schema.prisma"]],
+    "commands": { "lint": "{npx} prisma validate", "format": "{npx} prisma format --check" }
+  },
+  {
+    "id": "drizzle",
+    "ecosystem": "databases",
+    "priority": 5,
+    "joins": ["node"],
+    "standalone": false,
+    "markers": ["drizzle.config.{ts,js,mjs,cjs,json}"],
+    "commands": { "lint": "{npx} drizzle-kit check" }
+  },
+  {
+    "id": "alembic",
+    "ecosystem": "databases",
+    "priority": 5,
+    "joins": ["python"],
+    "standalone": false,
+    "markers": ["alembic.ini"]
+  },
+  {
+    "id": "flyway",
+    "ecosystem": "databases",
+    "priority": 5,
+    "joins": ["maven", "gradle"],
+    "standalone": false,
+    "markers": [["flyway.conf", "flyway.toml", "src/main/resources/db/migration/", "db/migration/"]]
+  },
+  {
+    "id": "liquibase",
+    "ecosystem": "databases",
+    "priority": 5,
+    "joins": ["maven", "gradle"],
+    "standalone": false,
+    "markers": [["liquibase.properties", "src/main/resources/db/changelog/", "db/changelog/"]]
+  },
+  {
+    "id": "elixir-mix",
+    "ecosystem": "elixir-erlang",
+    "priority": 10,
+    "markers": ["mix.exs"],
+    "workspace": { "when": { "file": "mix.exs", "has": "apps_path" } },
+    "commands": {
+      "install": "mix deps.get",
+      "build": "mix compile",
+      "lint": [ { "when": { "file": "mix.exs", "has": ":credo" }, "cmd": "mix credo --strict" } ],
+      "types": [ { "when": { "file": "mix.exs", "has": ":dialyxir" }, "cmd": "mix dialyzer" } ],
+      "test": "mix test",
+      "run": "mix run --no-halt",
+      "format": "mix format --check-formatted"
+    }
+  },
+  {
+    "id": "phoenix",
+    "ecosystem": "elixir-erlang",
+    "priority": 25,
+    "requires": ["elixir-mix"],
+    "content": [ { "file": "mix.exs", "has": ":phoenix" } ],
+    "commands": { "run": "mix phx.server" }
+  },
+  {
+    "id": "rebar3",
+    "ecosystem": "elixir-erlang",
+    "priority": 10,
+    "markers": ["rebar.config"],
+    "commands": {
+      "install": "rebar3 get-deps",
+      "build": "rebar3 compile",
+      "lint": "rebar3 xref",
+      "types": "rebar3 dialyzer",
+      "test": "rebar3 eunit",
+      "format": [ { "when": { "file": "rebar.config", "has": "erlfmt" }, "cmd": "rebar3 fmt --check" } ]
+    }
+  },
+  {
+    "id": "gleam",
+    "ecosystem": "elixir-erlang",
+    "priority": 10,
+    "markers": ["gleam.toml"],
+    "commands": {
+      "install": "gleam deps download",
+      "build": "gleam build",
+      "test": "gleam test",
+      "run": "gleam run",
+      "format": "gleam format --check"
+    }
+  }
+]

@@ -1,0 +1,25 @@
+
+> demo@1.0.0 test
+> jest
+
+PASS src/util.test.js
+FAIL src/sum.test.js
+  ● sum › adds numbers
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 4
+    Received: 3
+
+      3 | test('adds numbers', () => {
+    > 4 |   expect(sum(1, 2)).toBe(4);
+        |                     ^
+      5 | });
+
+      at Object.toBe (src/sum.test.js:4:21)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 10 passed, 11 total
+Snapshots:   0 total
+Time:        0.912 s
+Ran all test suites.

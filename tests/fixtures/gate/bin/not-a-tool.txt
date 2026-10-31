@@ -1,0 +1,1 @@
+Not an executable. Gate tests point a HADES_TOOL_<NAME> override here to simulate an unusable scanner.

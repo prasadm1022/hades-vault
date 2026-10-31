@@ -1,0 +1,23 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava
+> Task :test FAILED
+
+AppTest > adds() FAILED
+    org.opentest4j.AssertionFailedError at AppTest.java:12
+
+7 tests completed, 1 failed
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':test'.
+> There were failing tests. See the report at: file:///work/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 3s
+4 actionable tasks: 2 executed, 2 up-to-date

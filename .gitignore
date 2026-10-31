@@ -1,0 +1,25 @@
+# Runtime state, built tool binaries, caches and logs (never committed)
+.hades/
+.tools-bin/
+node_modules/
+*.log
+# ... except the recorded tool logs the gate tests parse
+!tests/fixtures/**/*.log
+
+# A vault holds private client data. Keep yours in its own private repository;
+# the default in-repo location (<engine>/vault) is ignored so it can never be published by mistake.
+# Anchored: templates/vault/ is the scaffold "hades init" copies and must be committed.
+/vault/
+/hades.config.json
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

@@ -1,0 +1,12 @@
+  Calculator
+    ✔ subtracts
+    1) adds
+
+
+  9 passing (12ms)
+  1 failing
+
+  1) Calculator
+       adds:
+     AssertionError: expected 3 to equal 4
+      at Context.<anonymous> (test/calc.spec.js:8:24)

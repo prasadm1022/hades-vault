@@ -1,0 +1,17 @@
+# Never committed to the vault
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.log
+.hades/
+# lock and temp files a crashed CLI run may leave in task and team folders
+*.json.lock
+*.lock.break
+.new-task.lock
+*.tmp
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
