@@ -25,14 +25,12 @@ Optional, so the npm metadata matches: the `keywords` in `package.json` can take
 
 ## Social preview
 
-GitHub does not use the animated README hero for link previews. Upload a static image under
+GitHub does not use the animated README hero (`docs/assets/hades-hero.webp`) for link previews. Upload a static image under
 **Settings > General > Social preview**:
 
 - PNG (or JPG), **1280x640**, under 1 MB.
-- Export one frame of `docs/assets/hades-hero.svg` (its canvas is already 1280x640). For example,
-  open the SVG in a browser window sized to 1280x640 and take a screenshot when the head faces the
-  viewer, or render it with any SVG-to-PNG tool. Keep the name and tagline legible (WCAG AA contrast on the dark
-  background).
+- Use `docs/assets/social-preview.png` (1280x640, one frame of the README hero with the name and
+  tagline). To make another, see [hero-tools](assets/hero-tools/README.md).
 - The preview controls how links look on X, LinkedIn, Slack, Discord and Reddit (Hacker News
   shows no link previews); it does not affect search ranking.
 

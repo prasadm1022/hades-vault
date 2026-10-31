@@ -25,3 +25,7 @@ node_modules/
 *.swp
 .DS_Store
 Thumbs.db
+
+# README hero sources (see docs/assets/hero-tools/README.md)
+/docs/assets/hero-tools/in.mp4
+/docs/assets/hero-tools/frames/

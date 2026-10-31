@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/hades-hero.svg" alt="HADES - autonomous AI software company: a digital human head made of a glowing network of dots, turning" width="100%">
+  <img src="docs/assets/hades-hero.webp" alt="HADES - autonomous AI software company: a glowing digital human head made of a network of dots, turning" width="100%">
 </p>
 
 <h1 align="center">HADES: the autonomous AI software company for Claude Code</h1>
