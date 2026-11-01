@@ -1,40 +1,40 @@
 [submodule "tools/rea"]
 	path = tools/rea
-	url = https://github.com/morluto/rea.git
+	url = https://github.com/prasadm1022/rea.git
 	shallow = true
 [submodule "tools/serena"]
 	path = tools/serena
-	url = https://github.com/oraios/serena.git
+	url = https://github.com/prasadm1022/serena.git
 	shallow = true
 [submodule "tools/ccusage"]
 	path = tools/ccusage
-	url = https://github.com/ryoppippi/ccusage.git
+	url = https://github.com/prasadm1022/ccusage.git
 	shallow = true
 [submodule "tools/gitleaks"]
 	path = tools/gitleaks
-	url = https://github.com/gitleaks/gitleaks.git
+	url = https://github.com/prasadm1022/gitleaks.git
 	shallow = true
 [submodule "tools/playwright-mcp"]
 	path = tools/playwright-mcp
-	url = https://github.com/microsoft/playwright-mcp.git
+	url = https://github.com/prasadm1022/playwright-mcp.git
 	shallow = true
 [submodule "tools/semgrep"]
 	path = tools/semgrep
-	url = https://github.com/semgrep/semgrep.git
+	url = https://github.com/prasadm1022/semgrep.git
 	shallow = true
 [submodule "tools/trivy"]
 	path = tools/trivy
-	url = https://github.com/aquasecurity/trivy.git
+	url = https://github.com/prasadm1022/trivy.git
 	shallow = true
 [submodule "tools/zaproxy"]
 	path = tools/zaproxy
-	url = https://github.com/zaproxy/zaproxy.git
+	url = https://github.com/prasadm1022/zaproxy.git
 	shallow = true
 [submodule "tools/aws-agent-toolkit"]
 	path = tools/aws-agent-toolkit
-	url = https://github.com/aws/agent-toolkit-for-aws.git
+	url = https://github.com/prasadm1022/agent-toolkit-for-aws.git
 	shallow = true
 [submodule "tools/mcp-proxy-for-aws"]
 	path = tools/mcp-proxy-for-aws
-	url = https://github.com/aws/mcp-proxy-for-aws.git
+	url = https://github.com/prasadm1022/mcp-proxy-for-aws.git
 	shallow = true

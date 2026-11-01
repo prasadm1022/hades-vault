@@ -13,6 +13,10 @@ HADES runs it on each OS and its hardening flags: [`tools/README.md`](../tools/R
   blocks writes under `tools/`).
 - `hades tools setup` installs each tool into `.tools-bin/<name>/` with an `install.json` (tag,
   commit, checksum or integrity); an install whose tag or commit differs from the lock is ignored.
+- Submodules clone from forks under `github.com/prasadm1022` (`.gitmodules`), so a pinned commit
+  stays available if upstream rewrites or deletes it. `repo` in the lock stays the upstream project:
+  release dates and commits are checked there, and `tools bump` fetches from it. A fork need not be
+  synced for a new pin: GitHub serves any commit of the upstream network from the fork.
 - Tests never need the submodules; CI checks out without them.
 
 ## Update policy
