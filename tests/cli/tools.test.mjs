@@ -32,6 +32,8 @@ import {
   verifyChecksum,
   cooldownCheck,
   verifyTools,
+  bumpTool,
+  patchTool,
   setupTool,
   ensureSerenaConfig,
   hardenSerenaConfig,
@@ -552,6 +554,46 @@ describe('verify', () => {
     const green = spawnSync(process.execPath, [CLI, 'tools', 'verify', '--json'], { encoding: 'utf8', env });
     assert.equal(green.status, 0, green.stderr);
     assert.equal(JSON.parse(green.stdout)[0].ok, true);
+  });
+
+  test('tools patch pins a pushed fork branch over the upstream base; bump refuses; --drop returns', async (t) => {
+    if (!gitOk) return t.skip('git not available');
+    process.env.PATH = saved.PATH;
+    const dir = `${root}/tools/serena`;
+    const base = gitRepo(dir);
+    const g = (...a) => spawnSync('git', ['-C', dir, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', '-c', 'commit.gpgsign=false', ...a], { encoding: 'utf8' });
+    const fork = `${root}/fork.git`;
+    spawnSync('git', ['init', '-q', '--bare', fork]);
+    g('remote', 'add', 'origin', fork);
+    writeLock(root, { serena: { ...PINS.serena, commit: base } });
+    const lock = () => JSON.parse(fs.readFileSync(`${root}/tools/tools.lock.json`, 'utf8')).tools.serena;
+
+    g('checkout', '-q', '--detach');
+    assert.throws(() => patchTool(ctx(), 'serena'), /not on a branch/);
+    g('switch', '-q', '-c', 'hades');
+    assert.throws(() => patchTool(ctx(), 'serena'), /no commits over its base v2\.0\.0/);
+    g('commit', '-q', '--allow-empty', '-m', 'fix');
+    const head = g('rev-parse', 'HEAD').stdout.trim();
+    assert.throws(() => patchTool(ctx(), 'serena'), /push the patch first/);
+    g('push', '-q', 'origin', 'hades');
+
+    const res = patchTool(ctx(), 'serena', { note: 'local fix' });
+    assert.equal(res.commit, head);
+    assert.match(res.effect, /^yes/);
+    assert.deepEqual(lock(), { ...PINS.serena, commit: head, patch: { branch: 'hades', base_tag: 'v2.0.0', base_commit: base, commits: 1, note: 'local fix' } });
+    assert.equal(verifyTools(ctx())[0].ok, true);
+    assert.equal(verifyTools(ctx())[0].patch.commits, 1);
+    await assert.rejects(bumpTool(ctx(), 'serena', 'v2.1.0'), /carries a patch \(1 commit\(s\) on hades over v2\.0\.0\).*--drop-patch/);
+
+    const env = { ...process.env, PATH: saved.PATH, HADES_ENGINE_ROOT: root, HADES_VAULT: `${root}/novault` };
+    const v = spawnSync(process.execPath, [CLI, 'tools', 'verify'], { encoding: 'utf8', env });
+    assert.equal(v.status, 0, v.stderr);
+    assert.match(v.stdout, /PATCHED  serena: 1 commit\(s\) on hades over v2\.0\.0/);
+
+    const drop = spawnSync(process.execPath, [CLI, 'tools', 'patch', 'serena', '--drop'], { encoding: 'utf8', env });
+    assert.equal(drop.status, 0, drop.stderr);
+    assert.deepEqual(lock(), { ...PINS.serena, commit: base });
+    assert.equal(g('rev-parse', 'HEAD').stdout.trim(), base);
   });
 });
 

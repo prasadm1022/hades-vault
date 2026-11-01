@@ -31,6 +31,31 @@ HADES runs it on each OS and its hardening flags: [`tools/README.md`](../tools/R
    `tools/<name>` and `tools/tools.lock.json` together.
 4. Never pin a release reported compromised; note it in `tools/README.md` (for example trivy v0.69.4).
 
+## Patching a tool
+
+The forks are yours, so a tool can carry local commits. HADES agents still cannot write under
+`tools/` (the guard); the owner makes the change.
+
+1. In `tools/<name>`: `git switch -c hades`, commit, `git push -u origin hades` (the fork).
+2. `hades tools patch <name> [--note "<why>"]` records the pushed HEAD in the lock as `commit`,
+   with `patch` = `{branch, base_tag, base_commit, commits, note}`; `tag` stays the upstream
+   release it builds on. It refuses a dirty tree, a detached HEAD, a branch the fork does not have
+   at that commit, and commits that do not build on the base.
+3. `hades tools setup <name> --force`, `npm test`, then commit `tools/<name>` and
+   `tools/tools.lock.json` together. `tools verify` and `tools list` show the patch.
+
+A patch only changes what runs where setup uses the vendored source: serena and
+mcp-proxy-for-aws (built from it), aws-agent-toolkit (read in place), playwright-mcp (its
+package.json, package-lock.json, cli.js and index.js), and rea with `setup --from-source`.
+gitleaks, trivy, semgrep, ccusage and zaproxy install the upstream release, so a patch there is
+recorded but not run; `tools patch` says which applies.
+
+`tools bump` refuses a patched tool. To carry a patch to a new release:
+`hades tools bump <name> <tag> --drop-patch`, rebase the branch onto the new pin in
+`tools/<name>`, push it (`--force-with-lease`), then `hades tools patch <name>` again.
+`hades tools patch <name> --drop` returns to the upstream base. Modified files keep their
+license; Apache-2.0 tools also need a change notice in each modified file.
+
 ## Supply-chain measures
 
 - Exact pins only: commits for submodules, exact versions for npm and PyPI packages, digests for

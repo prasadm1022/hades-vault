@@ -39,7 +39,8 @@ dependencies, Node >= 22. Output is short on purpose: agents read it, and every 
 | `hades tools setup [<name>...] [--force] [--from-source]` | installs pinned tools into `.tools-bin/` (default: all runnable). `--force` reinstalls; `--from-source` builds rea from the vendored tree (macOS/Linux). Exit 1 if any tool fails |
 | `hades tools run <name> -- <args>` | runs a pinned tool; stdio inherited, exit code passed through |
 | `hades tools verify` | submodule HEADs equal `tools/tools.lock.json`; exit 2 on mismatch |
-| `hades tools bump <name> <tag> [--force]` | moves a pin after checking the release is >= 14 days old (`--force` overrides); network; never commits |
+| `hades tools bump <name> <tag> [--force] [--drop-patch]` | moves a pin after checking the release is >= 14 days old (`--force` overrides); refuses a patched tool unless `--drop-patch`; network; never commits |
+| `hades tools patch <name> [--note <text>]` / `--drop` | pins the commit in `tools/<name>` (a branch pushed to the fork) as a patch over the upstream pin, or returns to the base; never commits |
 | `hades mcp <serena\|rea\|playwright\|aws> [--project <dir>]` | starts a pinned MCP server on stdio (agent frontmatter). stdout is the MCP channel; errors go to stderr. Working directory: `--project`, else the current one. `serena` starts without a project unless `--project` pins one, and the agents start it without: they call `activate_project` with the absolute `<Project>` path before the first symbol tool |
 | `hades mcp aws` | AWS MCP server through `mcp-proxy-for-aws`, signed with the configured profile (`hades.config.json` `aws`, else `AWS_PROFILE`); `read_only: true` adds `--read-only`. No profile: one stderr line, exit 1 (the server is simply unavailable) |
 
