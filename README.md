@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="docs/assets/hades-hero.webp" alt="HADES - autonomous AI software company: a glowing digital human head made of a network of dots, turning" width="100%">
+  <img src="docs/assets/hades-hero.webp" alt="HADES, the open-source autonomous AI software company for Claude Code: an animated digital head made of glowing dots" width="100%">
 </p>
 
-<h1 align="center">HADES: a whole AI dev team inside Claude Code</h1>
+<h1 align="center">HADES: Autonomous AI Software Company for Claude Code</h1>
+
+<p align="center"><em>An open-source multi-agent coding team: AI agents that analyse, build, test, secure and commit your code.</em></p>
 
 <p align="center">
   <strong>Type one requirement. Get back tested, security-scanned commits, without burning your token budget.</strong>
@@ -21,9 +23,9 @@
 
 <p align="center">
   <a href="#quick-start">Quick start</a> ·
-  <a href="#spend-tokens-where-they-count">Token savings</a> ·
-  <a href="#how-to-use-it">How to use it</a> ·
-  <a href="#other-coding-agents">Codex, Cursor, Copilot...</a> ·
+  <a href="#reduce-claude-code-token-usage">Token savings</a> ·
+  <a href="#how-to-use-hades">How to use it</a> ·
+  <a href="#use-hades-with-codex-cursor-gemini-cli-and-github-copilot">Codex, Cursor, Copilot...</a> ·
   <a href="#faq">FAQ</a>
 </p>
 
@@ -33,10 +35,12 @@ You already know the problem: one AI chat writes the code, says "done", and you 
 missing tests, the leaked key and the broken edge case later. Meanwhile it re-reads the same files
 and pours whole build logs into its context, and your token bill climbs.
 
-**HADES turns [Claude Code](https://code.claude.com) into a small software company.** A business
-analyst, architect, tech lead, backend, frontend, AI/ML and QA engineers, DevOps and a security
-engineer each do their part, check each other's work, and hand you **local commits and a report**.
-It never pushes: you review and push.
+**HADES is an open-source multi-agent framework that turns [Claude Code](https://code.claude.com)
+into an autonomous AI software company.** A team of Claude Code subagents (business analyst,
+software architect, tech lead, backend, frontend, AI/ML and QA engineers, DevOps and a cybersecurity
+engineer) each do their part, check each other's work, and hand you **local commits and a report**.
+It never pushes: you review and push. The same AI dev team also runs in OpenAI Codex, Cursor,
+Gemini CLI and GitHub Copilot.
 
 ```text
 /hades portal Customers can reset their password by email. Links expire after 30 minutes.
@@ -46,20 +50,21 @@ That one line gets you acceptance criteria, a design, a work plan, the code, tes
 security scans, a deploy to your test environment (if you set one up) and a report of exactly what
 changed.
 
-## Why developers use it
+## Why developers use HADES
 
 | | |
 |---|---|
 | 🧠 **A team, not a single chat** | 11 specialised agents. A role with nothing to do is never started. |
 | ✅ **"Done" means proven** | A stage passes only on real evidence: builds, tests, scanners, health checks. Never on an agent saying so. |
 | 🔒 **Safe by default** | A guard blocks `git push`, destructive git, secret reads and publishing, even in fully automatic mode. |
-| 💰 **Fewer tokens per result** | Short handoffs, trimmed tool output, cheap models for simple work. [See how](#spend-tokens-where-they-count). |
+| 💰 **Fewer tokens per result** | Short handoffs, trimmed tool output, cheap models for simple work. [See how](#reduce-claude-code-token-usage). |
 | 🧩 **Remembers your projects** | Lessons and project knowledge go into a private vault, so the next task starts smarter. |
 | 🔌 **Not locked in** | Also exports to OpenAI Codex, Cursor, Gemini CLI, GitHub Copilot, Devin, Cline and OpenCode. |
 
-## Spend tokens where they count
+## Reduce Claude Code token usage
 
-Whether you use Claude Code or another AI coding assistant, tokens are your budget. Most of what a
+Spend tokens where they count. Whether you use Claude Code or another AI coding assistant, tokens
+are your budget. Most of what a
 single long chat spends goes on re-reading files, scrolling logs and dragging old conversation along.
 HADES is built to cut that waste:
 
@@ -128,9 +133,9 @@ The first line teaches HADES your project (once per project). The second runs a 
 
 Works on Windows, macOS and Linux. On Windows, WSL2 gives you OS-level isolation as well.
 
-## How to use it
+## How to use HADES
 
-Type these in Claude Code, started in your workspace folder.
+Type these slash commands in Claude Code, started in your workspace folder.
 
 | Do this | Type |
 |---|---|
@@ -171,7 +176,7 @@ session on your account; the guard keeps blocking pushes and secret reads either
 More: [step-by-step guide](docs/getting-started.md) · [every command](docs/cli.md) ·
 [configuration and troubleshooting](docs/reference.md).
 
-## How it works
+## How the multi-agent pipeline works
 
 ```mermaid
 flowchart LR
@@ -189,6 +194,8 @@ flowchart LR
 - Task size (S, M, L) sets the depth: a copy change gets a light pass, a new payments flow gets the
   full treatment.
 
+**HADES compared with a single AI coding session:**
+
 |  | A plain AI chat | HADES |
 |---|---|---|
 | Who checks the work | the same chat that wrote it | separate QA and security agents |
@@ -199,7 +206,7 @@ flowchart LR
 
 Details: [architecture](docs/architecture.md) · [operating protocol](HADES.md).
 
-## Safe by default
+## Safe AI coding agents by default
 
 - **It never pushes, opens pull requests or publishes packages.** You review the commits and push.
 - **A guard checks every action first.** It runs as a Claude Code hook (matcher
@@ -215,9 +222,9 @@ blocked (`guard.limit`), and if the guard itself fails, calls containing a high-
 VM or a dev container. Read the diff before you push: a change can pass every check and still be
 wrong. Full details: [autonomy and safety](docs/autonomy-and-safety.md).
 
-## Other coding agents
+## Use HADES with Codex, Cursor, Gemini CLI and GitHub Copilot
 
-`hades export <target>` sets up the same team for another agent:
+`hades export <target>` sets up the same AI agent team for another coding agent:
 
 ```bash
 node bin/hades.mjs export codex     # or cursor, gemini, copilot, windsurf (Devin), cline, opencode, agents-md
@@ -234,17 +241,32 @@ platform. Setup per agent: [docs/other-agents.md](docs/other-agents.md).
 
 ## FAQ
 
-**Is it free?** Yes: HADES is MIT-licensed open source. You pay your model provider as usual.
+**What is HADES?** An open-source autonomous AI software company for Claude Code. Your main Claude
+Code session becomes a project manager that runs a team of specialised Claude Code subagents through
+analysis, design, build, QA, deploy and security testing, and ends with local git commits.
 
-**Does it push to GitHub?** Never. It commits locally; you review and push.
+**How do I run multiple Claude Code subagents as a team?** Install HADES, onboard a project with
+`/hades-new-team <team> <project-path>`, then type `/hades <team> <requirements>`. HADES starts
+each subagent when its stage begins, in parallel where the files don't overlap.
+
+**How can I reduce Claude Code token usage?** HADES trims build and test logs to a few lines, passes
+file pointers instead of content between agents, routes simple work to cheaper models and reads code
+by symbol. `hades usage` shows the tokens and cost of every task. [Details](#reduce-claude-code-token-usage).
 
 **Will it cost more tokens than a normal chat?** For a one-line fix, yes: use a normal chat. For a
 real feature, HADES avoids most of a long chat's waste and shows you the exact cost per task.
-[Why](#spend-tokens-where-they-count).
 
-**Can it build a whole new app?** Yes. Describe the product, and it picks a stack, sets up the
-repository, CI and deploy configuration, then builds, tests and scans it. It stops at local commits
-for you to review.
+**Is HADES free?** Yes: HADES is MIT-licensed open source. You pay your model provider as usual.
+
+**Does it push to GitHub?** Never. It commits locally; you review and push.
+
+**Can AI agents build a whole new app with HADES?** Yes. Describe the product, and it picks a stack,
+sets up the repository, CI and deploy configuration, then builds, tests and scans it. It stops at
+local commits for you to review.
+
+**Does it work with Cursor, Codex, Gemini CLI or GitHub Copilot?** Yes, through `hades export`.
+Claude Code has full support; the others have good or basic support
+([details](#use-hades-with-codex-cursor-gemini-cli-and-github-copilot)).
 
 **Is my code private?** Your code stays in your repositories, and task records stay in your private
 vault, which is never committed with HADES. HADES itself has no telemetry. As with any coding agent,

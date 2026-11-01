@@ -8,7 +8,7 @@ submit, because they change.
 
 **Description** (the gear icon next to "About" on the repository page):
 
-> Open-source autonomous AI software company for Claude Code. A team of AI agents (business analyst, architect, backend, frontend, QA, DevOps, security) takes a requirement through design, build, tests, security scans and local commits. Multi-agent coding with guard hooks; exports to Codex, Cursor, Gemini CLI and Copilot.
+> Open-source autonomous AI software company for Claude Code: a multi-agent coding team (analyst, architect, engineers, QA, DevOps, security) that turns one requirement into tested, security-scanned commits while cutting token usage. Also runs in Codex, Cursor, Gemini CLI and GitHub Copilot.
 
 **Website:** `https://hadesvault.com` (HADES is a project by HadesVault.com).
 
@@ -17,7 +17,7 @@ submit, because they change.
 ```text
 claude-code, claude, anthropic, ai-agents, multi-agent, multi-agent-systems, autonomous-agents,
 ai-software-company, agentic-ai, agentic-coding, ai-coding, coding-agent, claude-code-subagents,
-subagents, llm, sdlc, software-engineering, devops, code-generation, mcp
+token-optimization, llm, sdlc, software-engineering, devsecops, code-generation, mcp
 ```
 
 Optional, so the npm metadata matches: the `keywords` in `package.json` can take the same terms

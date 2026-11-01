@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use HADES in your work, please cite it as below."
+title: "HADES: Autonomous AI Software Company for Claude Code"
+abstract: >-
+  HADES is an open-source multi-agent framework that turns Claude Code into an
+  autonomous AI software company. A team of AI coding agents (business analyst,
+  software architect, engineers, QA, DevOps and cybersecurity) analyses, builds,
+  tests, security-scans and commits code, with token-efficient handoffs and a
+  deterministic safety guard. It also runs in OpenAI Codex, Cursor, Gemini CLI
+  and GitHub Copilot.
+type: software
+authors:
+  - family-names: Madusanka
+    given-names: Prasad
+    website: "https://hadesvault.com"
+repository-code: "https://github.com/prasadm1022/hades-vault"
+url: "https://hadesvault.com"
+license: MIT
+version: 2.0.0
+keywords:
+  - claude-code
+  - ai-agents
+  - multi-agent-systems
+  - autonomous-agents
+  - agentic-coding
+  - ai-software-company
+  - token-optimization

@@ -1,7 +1,7 @@
 {
   "name": "hades-vault",
   "version": "2.0.0",
-  "description": "HADES - an autonomous software company for Claude Code: business analysis, architecture, planning, build, QA, deploy and security testing by role agents, with token-efficient handoffs and deterministic safety guards. A project by HadesVault.com.",
+  "description": "HADES - open-source autonomous AI software company for Claude Code: a multi-agent coding team (analyst, architect, engineers, QA, DevOps, security) that builds, tests, scans and commits your code with fewer tokens. Also runs in Codex, Cursor, Gemini CLI and GitHub Copilot. A project by HadesVault.com.",
   "type": "module",
   "private": true,
   "license": "MIT",
@@ -29,10 +29,27 @@
   },
   "keywords": [
     "claude-code",
-    "agents",
+    "claude",
+    "anthropic",
+    "ai-agents",
     "multi-agent",
+    "multi-agent-systems",
+    "autonomous-agents",
+    "agentic-ai",
+    "agentic-coding",
+    "ai-coding",
+    "coding-agent",
+    "claude-code-subagents",
+    "ai-software-company",
+    "token-optimization",
+    "llm",
+    "mcp",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "github-copilot",
     "software-engineering",
-    "automation",
-    "devsecops"
+    "devsecops",
+    "automation"
   ]
 }
