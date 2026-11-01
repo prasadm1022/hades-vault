@@ -5,6 +5,13 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## Unreleased
 
+Nothing yet.
+
+## 2.0.0 - 2026-11-01
+
+First open-source release. Breaking: the framework moved out of the vault into this engine;
+migrate v1 vaults with `hades migrate` (`docs/migration-from-v1.md`).
+
 ### Changed (layout and naming)
 - The repository is renamed **hades-vault** (`https://github.com/prasadm1022/hades-vault`;
   `package.json` name `hades-vault`, the CLI stays `hades`): HADES, the shareable agentic platform,
@@ -54,6 +61,21 @@ versions follow [Semantic Versioning](https://semver.org/).
   the engine or a vault is refused except for a vault team folder or a registered project.
 
 ### Added
+- `hades tools patch <name> [--note <text>]` pins the commit checked out in `tools/<name>` (a branch
+  pushed to the tool's fork) as a patch over the upstream release, recorded in
+  `tools/tools.lock.json` as `patch` (`branch`, `base_tag`, `base_commit`, `commits`, `note`);
+  `--drop` returns to the upstream base. It reports whether the patch takes effect (only tools set up
+  from the vendored source). `tools verify` and `tools list` show patched pins; `tools bump` refuses
+  them unless `--drop-patch`. `docs/tools.md`, Patching a tool.
+- The vendored tools clone from forks under `github.com/prasadm1022` (`.gitmodules`), so pinned
+  commits stay available if upstream rewrites or deletes them. `tools/tools.lock.json` keeps the
+  upstream `repo`: `tools bump` checks releases there and fetches the new pin from upstream.
+- `docs/reference.md`: installation details, configuration, model routing, guard policy, vendored
+  tools, layout, upgrading and troubleshooting (moved from the README, which is now a short overview
+  with token savings, a usage table and a FAQ). `CITATION.cff` for GitHub's "Cite this repository".
+- `hades help` and the docs name HADES as a project by HadesVault.com; the README hero is an animated
+  WebP (`docs/assets/hades-hero.webp`) with a static `social-preview.png`, built by
+  `docs/assets/hero-tools/`.
 - `hades export <target> [--dir <dir>] [--scope project|user] [--dry-run] [--force]` renders HADES for
   other coding agents: `codex`, `cursor`, `gemini`, `copilot`, `windsurf` (alias `devin`), `cline`,
   `opencode`, and `agents-md` for any AGENTS.md tool (`roo` and `aider` fall back to it with a note).
@@ -105,12 +127,15 @@ versions follow [Semantic Versioning](https://semver.org/).
   also in `tools/tools.lock.json`); `package.json` names the repository, homepage and issue tracker.
 - `docs/tools.md` states how semgrep is installed and that its dependencies are not hash-checked.
 
-## 2.0.0 - 2026-10-31
+### Fixed
+- Guard on Windows: every path (engine, vault, workspace, config, policy, home, Claude folder,
+  current folder, registered projects and organizations, file-tool and shell targets) is judged in
+  long form. Paths with 8.3 short names (`C:/Users/RUNNER~1/...`) no longer block legitimate vault
+  and project writes or defeat exemptions.
+- Tests pass on every CI platform: the prompt path check treats the git-ignored `.vault` as a runtime
+  path, and the Serena startup test compares real paths (macOS `/var` is `/private/var`).
 
-First open-source release. Breaking: the framework moved out of the vault into this engine;
-migrate v1 vaults with `hades migrate` (`docs/migration-from-v1.md`).
-
-### Added
+### Added (v2 engine)
 - Engine/vault split: an MIT engine (agents, skills, policies, playbooks, CLI, hooks, templates,
   vendored tools) and a private vault (registry v3, organizations, teams, knowledge, tasks), joined by
   `hades.config.json`.
@@ -141,7 +166,7 @@ migrate v1 vaults with `hades migrate` (`docs/migration-from-v1.md`).
 - Documentation: getting started, architecture, CLI, file formats, autonomy and safety, token
   economy, tools, migration.
 
-### Changed
+### Changed (from v1)
 - v1 roles mapped to the v2 roster (security engineer -> cybersecurity engineer, senior QA -> QA
   engineer, senior AI/ML -> AI/ML/data engineer, full-stack and UI/UX -> backend and frontend
   engineers; new tech lead).
