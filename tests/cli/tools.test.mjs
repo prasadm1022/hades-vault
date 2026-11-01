@@ -636,7 +636,7 @@ describe('serena startup project', () => {
     assert.ok(!free.args.includes('--project'), free.args.join(' '));
     assert.ok(!free.args.includes('--project-from-cwd'));
     assert.equal(free.project, null);
-    assert.equal(free.cwd, workspace);
+    assert.equal(s(fs.realpathSync(free.cwd)), s(fs.realpathSync(workspace))); // macOS: /var is /private/var
     assert.equal(free.args[free.args.indexOf('--context') + 1], 'claude-code');
     assert.ok(!serenaArgs().includes('--project') && !serenaArgs(null).includes('--project'));
     const project = s(fs.mkdtempSync(path.join(root, 'proj-')));
