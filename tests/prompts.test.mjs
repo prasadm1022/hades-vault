@@ -382,7 +382,7 @@ test('placeholders: agents and skills use the installer vars; playbooks use <eng
 });
 
 test('every engine path referenced by the prompt layer exists', () => {
-  const RUNTIME = /^(\.hades|\.tools-bin|vault|hades\.config\.json)(\/|$)/;
+  const RUNTIME = /^(\.hades|\.tools-bin|\.?vault|hades\.config\.json)(\/|$)/;
   const missing = [];
   let checked = 0;
   const check = (file, rel, kind) => {
