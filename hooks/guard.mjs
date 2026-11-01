@@ -14,7 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SELF_FILE = fileURLToPath(import.meta.url);
-const ENGINE_DIR = path.resolve(path.dirname(SELF_FILE), '..');
+const ENGINE_RAW = path.resolve(path.dirname(SELF_FILE), '..'); // may hold 8.3 short names: use ENGINE_DIR
 const WIN = process.platform === 'win32';
 const MARK = '\u0001'; // internal: marks a substitution inside a word; never legitimate in input
 const SEP = '\u0002'; // internal: separates message parts
@@ -620,6 +620,9 @@ function longName(p) {
 }
 // A wildcard in a segment that looks like a short name (VAULT~?, HADES-~*) cannot be expanded safely.
 const shortGlob = (p) => WIN && String(p).split('/').some((seg) => /~[\d*?[]/.test(seg) && hasGlob(seg));
+// Targets are judged in long form, so every root they are compared with must be long too: a hook
+// started through a short path (C:/Users/RUNNER~1/...) would otherwise own nothing it protects.
+const ENGINE_DIR = longName(slash(ENGINE_RAW));
 
 // Glob -> RegExp over lower-cased normalised paths. Backslash escapes a character.
 function globRe(glob, anchored = true) {
@@ -797,17 +800,17 @@ function defaultVault(env) {
 }
 
 function makeContext(input, env) {
-  const policyFile = slash(path.resolve(env.HADES_GUARD_POLICY || path.join(ENGINE_DIR, 'hooks', 'guard-policy.json')));
+  const policyFile = longName(slash(path.resolve(env.HADES_GUARD_POLICY || path.join(ENGINE_DIR, 'hooks', 'guard-policy.json'))));
   const loaded = readJson(policyFile);
   const policy = deepMerge(DEFAULT_POLICY, loaded && typeof loaded === 'object' && !Array.isArray(loaded) ? loaded : {});
   for (const k of ['protectedPaths', 'selfProtected', 'selfProtectedNames', 'neverWritable', 'commandRules', 'rawRules', 'tempDirs', 'pasteHosts', 'gitConfigFiles', 'legacyDirs']) {
     if (!Array.isArray(policy[k])) policy[k] = [];
   }
-  const configFile = slash(path.resolve(env.HADES_CONFIG_FILE || path.join(ENGINE_DIR, 'hades.config.json')));
+  const configFile = longName(slash(path.resolve(env.HADES_CONFIG_FILE || path.join(ENGINE_DIR, 'hades.config.json'))));
   const engine = slash(ENGINE_DIR);
-  const home = slash(os.homedir());
-  const claudeDir = slash(path.resolve(String(env.CLAUDE_CONFIG_DIR || '').trim() || path.join(os.homedir(), '.claude')));
-  const cwd = np(input.cwd || process.cwd(), null) || slash(process.cwd());
+  const home = longName(slash(os.homedir()));
+  const claudeDir = longName(slash(path.resolve(String(env.CLAUDE_CONFIG_DIR || '').trim() || path.join(os.homedir(), '.claude'))));
+  const cwd = longName(np(input.cwd || process.cwd(), null) || slash(process.cwd()));
   const X = { policy, env, agent: String(input.agent_type || ''), cwd, engine, home, configFile, policyFile, claudeDir };
   X.deadline = Date.now() + BUDGET_MS;
   X.config = memo(() => readJson(configFile) || {});
@@ -815,9 +818,9 @@ function makeContext(input, env) {
   // then <engine>/.vault (a legacy <engine>/vault with a registry.json while .vault does not exist).
   // A relative HADES_VAULT / HADES_WORKSPACE is relative to the engine as well (the hook's cwd varies).
   const fromConfig = (v) => (typeof v === 'string' && v ? path.resolve(ENGINE_DIR, v) : null);
-  X.vaultConfigured = memo(() => slash(path.resolve(fromConfig(env.HADES_VAULT) || fromConfig(X.config().vault) || defaultVault(env))));
+  X.vaultConfigured = memo(() => longName(slash(path.resolve(fromConfig(env.HADES_VAULT) || fromConfig(X.config().vault) || defaultVault(env)))));
   // Where a vault sits by default: <engine>/.vault and the legacy <engine>/vault (or HADES_DEFAULT_VAULT).
-  X.vaultCandidates = memo(() => (env.HADES_DEFAULT_VAULT ? [slash(path.resolve(env.HADES_DEFAULT_VAULT))] : [`${engine}/.vault`, `${engine}/vault`]));
+  X.vaultCandidates = memo(() => (env.HADES_DEFAULT_VAULT ? [longName(slash(path.resolve(env.HADES_DEFAULT_VAULT)))] : [`${engine}/.vault`, `${engine}/vault`]));
   // A configured vault without registry.json (a stale absolute path after the engine folder was
   // renamed, a moved vault) falls back to a default location that holds one, so the real vault keeps
   // its protection and the roles keep their scope. An explicit HADES_VAULT is used as given.
@@ -834,10 +837,10 @@ function makeContext(input, env) {
   });
   X.inVault = (p) => X.vaultRoots().some((v) => isInside(p, v));
   X.isRegistry = (p) => X.vaultRoots().some((v) => K(p) === K(`${v}/registry.json`));
-  X.workspace = memo(() => slash(path.resolve(fromConfig(env.HADES_WORKSPACE) || fromConfig(X.config().workspace) || path.dirname(ENGINE_DIR))));
+  X.workspace = memo(() => longName(slash(path.resolve(fromConfig(env.HADES_WORKSPACE) || fromConfig(X.config().workspace) || path.dirname(ENGINE_DIR)))));
   X.registry = memo(() => readJson(`${X.vault()}/registry.json`) || {});
-  X.projects = memo(() => Object.values(X.registry().teams || {}).map((t) => t && t.project_path).filter(Boolean).map((p) => np(p, null)).filter(Boolean));
-  X.orgs = memo(() => Object.values(X.registry().organizations || {}).map((o) => o && o.root_path).filter(Boolean).map((p) => np(p, null)).filter(Boolean));
+  X.projects = memo(() => Object.values(X.registry().teams || {}).map((t) => t && t.project_path).filter(Boolean).map((p) => longName(np(p, null))).filter(Boolean));
+  X.orgs = memo(() => Object.values(X.registry().organizations || {}).map((o) => o && o.root_path).filter(Boolean).map((p) => longName(np(p, null))).filter(Boolean));
   X.ostmp = memo(() => {
     const out = new Set();
     for (const t of [os.tmpdir(), env.TEMP, env.TMP, env.TMPDIR]) {
@@ -2683,11 +2686,9 @@ function projectOwned(p, X) {
 // Literal (glob-free) checks of one normalised path.
 function hitAt(p, kind, c, X, long = true) {
   if (long && !c.remote) {
+    // A short name is judged as its long form only: every root it is compared with is long.
     const L = longName(p);
-    if (L !== p) {
-      const h = hitAt(L, kind, c, X, false);
-      if (h) return h;
-    }
+    if (L !== p) return hitAt(L, kind, c, X, false);
   }
   let base = p;
   while (/\/(\*|\.\*|\*\.\*|\*\*)$/.test(base)) base = base.replace(/\/(\*|\.\*|\*\.\*|\*\*)$/, '') || '/';
@@ -2929,7 +2930,7 @@ function checkWriteProtected(c, X, st) {
     const low = K(slash(w.v));
     const hit = names.find((n) => low.includes(n));
     if (!hit) continue;
-    const p = w.v.length <= MAX_PATH_CHARS ? np(w.v, c.cwd) : null;
+    const p = w.v.length <= MAX_PATH_CHARS ? longName(np(w.v, c.cwd)) : null;
     if (p && !/\s/.test(w.v) && exempt(K(p), del) && !X.selfCoreRes().some((r) => r.test(K(p)))) continue;
     return new Block('self.protect', hit);
   }
@@ -2951,7 +2952,7 @@ function checkWriteTarget(s, del, c, X, o) {
   const forms = [];
   const alts = c.mode === 'bash' && hasBrace(s) ? braceExpand(s) : [s];
   for (const a of alts) {
-    const p = np(a, c.cwd);
+    const p = longName(np(a, c.cwd));
     if (!p) {
       if (c.cwd || c.remote || /^[a-z][a-z0-9+.-]+:/i.test(a)) continue;
       // directory unknown ("cd" into a variable or an ambiguous glob): judge by name
@@ -3332,7 +3333,7 @@ function checkFileTool(tool, ti, X) {
     return null;
   }
   if (!raw) return null;
-  const p = np(raw, X.cwd);
+  const p = longName(np(raw, X.cwd)); // both forms below must be long: the roots they are judged against are
   if (!p) return null;
   const real = realOf(p);
   const forms = [p, real].filter(Boolean);
