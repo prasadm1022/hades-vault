@@ -27,7 +27,7 @@ async function main() {
   const argv = process.argv.slice(2);
   const name = argv[0];
   if (!name || name === 'help' || name === '--help' || name === '-h') {
-    print('HADES - autonomous software company for Claude Code\n\nUsage: hades <command> [args] [--flags]\n');
+    print('HADES - autonomous software company for Claude Code\nA project by HadesVault.com\n\nUsage: hades <command> [args] [--flags]\n');
     for (const [k, v] of Object.entries(COMMANDS)) print(`  ${k.padEnd(9)} ${v}`);
     print('\nRun "hades <command> --help" for details.');
     return;

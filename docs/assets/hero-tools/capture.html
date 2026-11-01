@@ -15,7 +15,8 @@ function drawText(ctx){ctx.save();ctx.scale(SCALE,SCALE);
   ctx.fillStyle=tg;ctx.font='800 112px "Segoe UI",Inter,Helvetica,Arial,sans-serif';ctx.letterSpacing='10px';ctx.shadowColor='rgba(56,189,248,.45)';ctx.shadowBlur=24;ctx.fillText('HADES',62,268);
   ctx.shadowBlur=0;ctx.letterSpacing='0px';ctx.fillStyle='#e2e8f0';ctx.font='600 30px "Segoe UI",Inter,Helvetica,Arial,sans-serif';ctx.fillText('The autonomous AI software company',66,322);
   ctx.fillStyle='#94a3b8';ctx.font='21px "Segoe UI",Inter,Helvetica,Arial,sans-serif';ctx.fillText('Requirements in. Tested, security-scanned commits out.',66,372);ctx.fillText('11 AI role agents, one pipeline, zero pushes without you.',66,402);
-  ctx.fillStyle='#64748b';ctx.font='15px "Segoe UI",Inter,Helvetica,Arial,sans-serif';ctx.letterSpacing='1.5px';ctx.fillText('CLAUDE CODE · CODEX · CURSOR · GEMINI CLI · COPILOT · MIT',66,466);ctx.restore()}
+  ctx.fillStyle='#64748b';ctx.font='15px "Segoe UI",Inter,Helvetica,Arial,sans-serif';ctx.letterSpacing='1.5px';ctx.fillText('CLAUDE CODE · CODEX · CURSOR · GEMINI CLI · COPILOT · MIT',66,466);
+  ctx.letterSpacing='0px';ctx.font='600 19px "Segoe UI",Inter,Helvetica,Arial,sans-serif';ctx.fillStyle='#94a3b8';ctx.fillText('A project by ',66,512);ctx.fillStyle='#67e8f9';ctx.fillText('HadesVault.com',66+ctx.measureText('A project by ').width,512);ctx.restore()}
 (async()=>{const url=URL.createObjectURL(await (await fetch('in.mp4')).blob());const a=await mk(url),b=await mk(url);
   const D=a.duration, L=D-FADE;
   async function frame(t){await seek(a,t);drawVideo(g,a);

@@ -1,11 +1,14 @@
 {
   "name": "hades-vault",
   "version": "2.0.0",
-  "description": "HADES - an autonomous software company for Claude Code: business analysis, architecture, planning, build, QA, deploy and security testing by role agents, with token-efficient handoffs and deterministic safety guards.",
+  "description": "HADES - an autonomous software company for Claude Code: business analysis, architecture, planning, build, QA, deploy and security testing by role agents, with token-efficient handoffs and deterministic safety guards. A project by HadesVault.com.",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "author": "Prasad Madusanka",
+  "author": {
+    "name": "Prasad Madusanka",
+    "url": "https://hadesvault.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/prasadm1022/hades-vault.git"

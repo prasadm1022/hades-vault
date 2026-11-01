@@ -10,7 +10,7 @@ submit, because they change.
 
 > Open-source autonomous AI software company for Claude Code. A team of AI agents (business analyst, architect, backend, frontend, QA, DevOps, security) takes a requirement through design, build, tests, security scans and local commits. Multi-agent coding with guard hooks; exports to Codex, Cursor, Gemini CLI and Copilot.
 
-**Website:** leave empty, or point it at the README (`https://github.com/prasadm1022/hades-vault#readme`).
+**Website:** `https://hadesvault.com` (HADES is a project by HadesVault.com).
 
 **Topics** (GitHub allows 20):
 
@@ -119,6 +119,7 @@ It also exports to Codex, Cursor, Gemini CLI, Copilot, Devin, Cline and OpenCode
 documented in a support matrix.
 
 Repo: https://github.com/prasadm1022/hades-vault
+A project by HadesVault.com: https://hadesvault.com
 
 Feedback on the pipeline and the guard rules is very welcome.
 ```
@@ -155,6 +156,7 @@ reads, and the run ends with local commits and a report for you to review.
 It also exports to OpenAI Codex, Cursor, Gemini CLI, GitHub Copilot, Devin, Cline and OpenCode.
 
 MIT licensed: https://github.com/prasadm1022/hades-vault
+A project by HadesVault.com: https://hadesvault.com
 ```
 
 ## dev.to article

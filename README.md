@@ -8,6 +8,8 @@
   <strong>State a requirement. A team of AI agents analyses, designs, builds, tests, deploys and security-scans it, then hands you local commits to review.</strong>
 </p>
 
+<p align="center"><sub>A project by <a href="https://hadesvault.com">HadesVault.com</a></sub></p>
+
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white" alt="Node.js 22 or newer"></a>
@@ -1102,7 +1104,8 @@ GPL-3.0-or-later), with NOTICE and legal-notice files to keep when you redistrib
 [MCP Proxy for AWS](https://github.com/aws/mcp-proxy-for-aws). It runs on
 [Claude Code](https://code.claude.com). Product names are trademarks of their owners.
 
-**Author.** Built by Prasad Madusanka ([@prasadm1022](https://github.com/prasadm1022)).
+**Author.** A project by [HadesVault.com](https://hadesvault.com), built by Prasad Madusanka
+([@prasadm1022](https://github.com/prasadm1022)).
 
 ## Star History
 

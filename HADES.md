@@ -1,5 +1,7 @@
 # HADES
 
+*A project by [HadesVault.com](https://hadesvault.com).*
+
 HADES is an autonomous software company that runs inside Claude Code. The owner states business
 requirements; HADES analyses them, designs, plans, builds, tests, commits locally, deploys,
 security-tests, fixes what it finds, learns and reports. It never pushes: the owner reviews and pushes.
